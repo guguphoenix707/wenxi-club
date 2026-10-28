@@ -16,7 +16,7 @@ MVP 为 **4 张业务表**（`user_settings`、`cards`、`card_review_states`、
 - 每张可变表的 updated_at 由服务端更新；历史/流水是追加记录，不设 updated_at 让业务覆盖。ID 不承担权限作用。
 - 卡片内容、当前长期温习状态、已完成学习结果分开。轮内队列、剩余熟知次数和重复出卡顺序仅在本端；本次不保存未完成卡片的反馈。
 - 业务表使用 UUID 和 timestamptz；业务自然日先固定 Asia/Shanghai。Better Auth 的主键统一配置 UUID，实际迁移需与选定适配器生成的 schema 对齐。
-- 枚举采用字符串列与 CHECK 白名单，应用层用 TypeScript 联合类型。阶段为 `new / review_1d / review_7d / review_30d`；扩展阶段仍需更新转换规则和迁移。
+- 枚举采用字符串列与 CHECK 白名单，应用层用 TypeScript 联合类型。排期采用 FSRS；stage 仅表示 `new / learning / review / relearning` 等调度状态，不再用固定1/7/30天命名。具体状态及转换与锁定的 FSRS 实现保持一致。
 
 # 2. 表清单与实施阶段
 
@@ -106,6 +106,8 @@ erDiagram
         uuid card_id PK,FK
         uuid user_id FK
         string stage
+        float stability
+        float difficulty
         timestamp next_review_at
         bigint version
         string algorithm_version
@@ -121,7 +123,7 @@ erDiagram
     }
 ```
 
-开始一轮时，读取 user_settings.review_batch_size 后在本地固定实际卡片集合和数量；没有每日首轮快照表，也不持久化完整轮内队列。创建卡片时同事务创建状态行，保证应用内一张卡片一份当前状态。review_logs 是完成结果，MVP不记录每次轮内点击。algorithm_version 在MVP均为空。
+开始一轮时，用户主动设置过数量则读取 user_settings.review_batch_size，否则使用当时的全局默认值，再在本地固定实际卡片集合和数量；没有每日首轮快照表，也不持久化完整轮内队列。创建卡片时同事务创建状态行，保证应用内一张卡片一份当前状态。review_logs 是完成结果，MVP不记录每次轮内点击。FSRS 使用每张卡本轮汇总评分更新状态和排期，记录实际使用的 algorithm_version。
 
 ## 3.3 邀请内测与权益
 
@@ -246,7 +248,7 @@ erDiagram
 
 权益发放可能来自活动，未必有订单；只卖同步的订单未必产生额度流水。user_entitlements 是快照，quota_ledger 是额度变更事实，二者由事务维护。
 
-可编辑的 draw.io XML 源文件（5页；可导入 draw.io）：
+原版可编辑的 draw.io XML 源文件（5页；附件尚未同步本轮 FSRS 字段调整，以本页 ER 图与字段字典为准）：
 
 wenxi-cards-database-er.drawio.xml
 
@@ -265,7 +267,7 @@ wenxi-cards-database-er.drawio.xml
 - Better Auth 配置统一使用 UUID 主键（`advanced.database.generateId: "uuid"`），业务表 user_id 同为 uuid。若所选适配器生成的实际类型不同，先统一迁移类型再建外键。
 - 映射 name → nickname、image → avatar_url、userId → user_id、时间字段 → created_at/updated_at；email、email_verified 及其余核心字段遵循生成 schema。微信不提供邮箱的注册路径必须用所选库版本实测，不强迫用户填邮箱，也不把虚构邮箱标为已验证。
 - 原用户资料中的 `status`（active/disabled）、`wechat_platform_id`、`wechat_unionid`、`last_login_at` 如继续保留，通过受控 additionalFields/hook 对接；归属、禁用状态和已验证身份等服务端字段不允许客户端任意填写。平台命名空间与UnionID成对出现，已验证的非空组合唯一。
-- 每轮数量统一保存在 user_settings，users 不再保留重复设置。
+- 用户主动修改的每轮数量统一保存在 user_settings，未设置时读取全局默认值；users 不再保留重复设置。
 - 网站微信扫码使用官方 WeChat provider。小程序登录属于后续独立接入核对，不能把网站扫码配置直接当小程序登录实现。
 - 所有业务接口先用库读取有效会话，再校验卡片/日志/权益归属；用库不等于自动拥有业务行级权限。
 
@@ -277,12 +279,12 @@ Better Auth 数据库与Schema生成 · 会话管理 · 微信网站登录
 
 | 字段 | PostgreSQL 类型 | 空值 / 默认 / 键 | 含义 |
 | --- | --- | --- | --- |
-| `user_id` | uuid | PK；FK users(id) | 每个用户一条 |
-| `review_batch_size` | integer | NOT NULL；默认10 | 每轮希望抽取的卡片数 |
+| `user_id` | uuid | PK；FK users(id) | 仅用户主动保存设置时创建，一用户至多一条 |
+| `review_batch_size` | integer | NOT NULL；无数据库默认值 | 用户主动设置的每轮卡片数；未设置时不写入 |
 | `created_at` | timestamptz | NOT NULL；默认now() | 首次保存时间 |
 | `updated_at` | timestamptz | NOT NULL；默认now() | 设置修改时间 |
 
-约束与索引：CHECK review_batch_size > 0。默认10由数据库默认值与服务端配置保持一致；上限由产品确认后配置。首次使用按用户ID幂等创建设置。当前轮次在开始时读取此值并固定本地目标数量；设置修改仅影响新轮次。实际选到数量=min(目标数量,符合筛选的可选数量)。不另设每日首轮快照表。
+约束与索引：CHECK review_batch_size > 0。只保存用户主动修改的数量；无设置记录时，每次开始新轮读取全局默认值（当前10），不在首次使用时自动创建默认设置。全局默认改为20后，未设置用户的新轮按20张出卡，主动保存过的数量不变；可配置上限仍待确定。当前轮次在开始时固定本地目标数量；设置或全局默认值修改仅影响新轮次。实际选到数量=min(目标数量,符合筛选的可选数量)。不另设每日首轮快照表。
 
 ## cards · 卡片
 
@@ -295,13 +297,13 @@ Better Auth 数据库与Schema生成 · 会话管理 · 微信网站登录
 | `title` | text | NOT NULL | 卡片标题，非空 |
 | `body` | text | NOT NULL；默认空串 | 补充题干/内容 |
 | `reference_answer` | text | NOT NULL | 当前问答卡的参考答案，非空 |
-| `content_hash` | char(64) | NOT NULL | 内容规范化后计算的SHA-256摘要 |
+| `title_hash` | char(64) | NOT NULL | 仅规范化标题后计算的SHA-256摘要，用于标题去重 |
 | `version` | bigint | NOT NULL；默认1 | 编辑版本，每次修改递增 |
 | `created_at` | timestamptz | NOT NULL；默认now() | 创建时间 |
 | `updated_at` | timestamptz | NOT NULL；默认now() | 最近修改时间 |
 | `deleted_at` | timestamptz | NULL | 软删除标记 |
 
-约束与索引：UNIQUE(user_id,id)；未删除卡片的部分唯一索引(user_id,content_hash)。CHECK version>0、title/reference_answer 非空；category 非空时不允许纯空白，tags 不允许NULL元素或空名称。标签先在服务端去重并统一首尾空白，代码内容的大小写和内部空格不改。列表索引(user_id,created_at DESC,id DESC) WHERE deleted_at IS NULL；分类索引(user_id,category) WHERE deleted_at IS NULL；标签筛选需要时增加 GIN(tags) WHERE deleted_at IS NULL。分类/标签仅作元数据，不参与内容去重摘要。
+约束与索引：UNIQUE(user_id,id)；未删除卡片的部分唯一索引(user_id,title_hash)。CHECK version>0、title/reference_answer 非空；category 非空时不允许纯空白，tags 不允许NULL元素或空名称。标签先在服务端去重并统一首尾空白，代码内容的大小写和内部空格不改。列表索引(user_id,created_at DESC,id DESC) WHERE deleted_at IS NULL；分类索引(user_id,category) WHERE deleted_at IS NULL；标签筛选需要时增加 GIN(tags) WHERE deleted_at IS NULL。题干、参考答案、分类和标签均不参与标题去重摘要。
 
 ## card_review_states · 当前长期温习状态
 
@@ -309,15 +311,18 @@ Better Auth 数据库与Schema生成 · 会话管理 · 微信网站登录
 | --- | --- | --- | --- |
 | `card_id` | uuid | PK | 一张卡片一份当前状态 |
 | `user_id` | uuid | NOT NULL | 为按用户查到期卡片保留的冗余归属 |
-| `stage` | varchar(24) | NOT NULL；默认new | new / review_1d / review_7d / review_30d |
-| `last_rating` | varchar(16) | NULL | 最近一次完成结果的rating，不代表轮内最后一次点击 |
+| `stage` | varchar(24) | NOT NULL；默认new | FSRS调度状态：new / learning / review / relearning，不表示固定间隔 |
+| `stability` | double precision | NULL；新卡为空 | FSRS记忆稳定性S，单位天 |
+| `difficulty` | double precision | NULL；新卡为空 | FSRS难度D，范围1～10 |
+| `learning_step` | integer | NOT NULL；默认0 | 学习/重新学习步骤位置，与锁定的FSRS调度实现保持一致 |
+| `last_rating` | varchar(16) | NULL | 最近一次完成结果的FSRS汇总评分：again / hard / good / easy |
 | `last_reviewed_at` | timestamptz | NULL | 最近一条已完成温习结果的服务端时间 |
 | `next_review_at` | timestamptz | NULL | 新卡片为空；已排期卡片为下次时间 |
 | `version` | bigint | NOT NULL；默认0 | 每次成功保存完成结果递增，用于条件更新 |
-| `algorithm_version` | varchar(32) | NULL；MVP不使用 | 未来产生当前排期的算法规则版本 |
+| `algorithm_version` | varchar(32) | NULL；新卡可空，排期后必填 | 产生当前排期的FSRS模型、参数与评分映射配置版本 |
 | `updated_at` | timestamptz | NOT NULL；默认now() | 状态更新时间 |
 
-约束与索引：复合FK(user_id,card_id) → cards(user_id,id)；CHECK stage IN ('new','review_1d','review_7d','review_30d')、version>=0；last_rating 允许 known/fuzzy/forgot 或NULL。到期查询索引(user_id,next_review_at,card_id)。version 防止旧状态覆盖新状态，不代替幂等ID；MVP algorithm_version 始终NULL，不强制填写伪版本。
+约束与索引：复合FK(user_id,card_id) → cards(user_id,id)；CHECK stage IN ('new','learning','review','relearning')、version>=0、learning_step>=0；last_rating 允许 again/hard/good/easy 或NULL。stability 非空时>0，difficulty 非空时在1～10内；已温习卡片要求S、D、last_reviewed_at、next_review_at和algorithm_version非空，新卡未初始化的S、D为空。到期查询索引(user_id,next_review_at,card_id)。version 防止旧状态覆盖新状态，不代替幂等ID。R按当前时间、S及对应FSRS参数实时计算，不单独存一个会随时间失效的R或掌握分；改卡不重置S、D、stage和排期。
 
 ## review_logs · 持久化温习结果
 
@@ -329,15 +334,17 @@ Better Auth 数据库与Schema生成 · 会话管理 · 微信网站登录
 | `card_version` | bigint | NOT NULL | 温习时卡片版本；保存前校验 |
 | `round_id` | uuid | NOT NULL | 本地轮次标识，用于分组与防重复完成 |
 | `event_type` | varchar(24) | NOT NULL；默认card_completed | MVP只允许card_completed；feedback为未来预留 |
-| `rating` | varchar(16) | NOT NULL | 完成记录为本轮最困难反馈的摘要；未来feedback记录单次反馈 |
+| `rating` | varchar(16) | NOT NULL | card_completed为本轮FSRS汇总评分again/hard/good/easy；未来feedback记录单次原始反馈known/fuzzy/forgot |
 | `reviewed_at` | timestamptz | NOT NULL；默认now() | 服务端接受本次提交的时间 |
-| `stage_before` | varchar(24) | 条件必填 | card_completed为写入前阶段；未来feedback为空 |
-| `stage_after` | varchar(24) | 条件必填 | card_completed为写入后阶段；未来feedback为空 |
+| `stage_before` | varchar(24) | 条件必填 | card_completed为写入前FSRS调度状态；未来feedback为空 |
+| `stage_after` | varchar(24) | 条件必填 | card_completed为写入后FSRS调度状态；未来feedback为空 |
+| `stability_before` / `stability_after` | double precision | 条件必填 | FSRS更新前后的S；新卡首次完成的before可空，未来feedback均为空 |
+| `difficulty_before` / `difficulty_after` | double precision | 条件必填 | FSRS更新前后的D；新卡首次完成的before可空，未来feedback均为空 |
 | `next_review_at` | timestamptz | 条件必填 | card_completed为新排期；未来feedback为空 |
 | `state_version_after` | bigint | 条件必填 | card_completed为成功写入后的状态版本；未来feedback为空 |
-| `algorithm_version` | varchar(32) | NULL；MVP不使用 | 未来记录此次所用的规则版本 |
+| `algorithm_version` | varchar(32) | 条件必填 | card_completed记录本次FSRS模型、参数与评分映射配置版本；未来feedback为空 |
 
-约束与索引：复合FK(user_id,card_id) → cards(user_id,id)。CHECK event_type IN ('card_completed','feedback')、rating IN ('known','fuzzy','forgot')。card_completed 要求阶段、下次排期、state_version_after非空；feedback要求这些结果字段为空。部分唯一索引(user_id,round_id,card_id) WHERE event_type='card_completed'；部分唯一索引(card_id,state_version_after) WHERE event_type='card_completed'。索引(user_id,reviewed_at)。id重试只返回本用户原记录，相同ID带不同业务输入拒绝。MVP接口仅接受card_completed，不因数据库允许feedback就开放功能。 阶段结果字段非空时使用与card_review_states.stage相同的字符串白名单；card_version>0，state_version_after非空时>0。
+约束与索引：复合FK(user_id,card_id) → cards(user_id,id)。CHECK event_type IN ('card_completed','feedback')；card_completed 的rating限again/hard/good/easy，feedback的rating限known/fuzzy/forgot，按event_type作条件CHECK。card_completed要求更新前后stage、新排期、state_version_after、更新后的S/D与algorithm_version非空；首次完成前的S/D可空，其余数值范围与当前状态一致；feedback要求排期及算法结果字段为空。部分唯一索引(user_id,round_id,card_id) WHERE event_type='card_completed'；部分唯一索引(card_id,state_version_after) WHERE event_type='card_completed'。索引(user_id,reviewed_at)。id重试只返回本用户原记录，相同ID带不同业务输入拒绝。MVP接口仅接受card_completed，不因数据库允许feedback就开放功能。stage结果使用与card_review_states.stage相同的字符串白名单；card_version>0，state_version_after非空时>0。
 
 ### user_id 是否会更快
 
@@ -349,7 +356,7 @@ Better Auth 数据库与Schema生成 · 会话管理 · 微信网站登录
 
 `version` 是并发控制：两端都读到版本3时，第一份完成结果写成4，另一份基于3的请求拒绝覆盖。幂等ID则保证同一提交重试不执行第二次。
 
-`algorithm_version` 是未来的排期规则版本，例如将来上线新间隔规则时使用。字段保留为NULL扩展位，MVP无版本路由、无强制填写、无旧规则兼容分支；启用时先定义版本标识、旧数据迁移及结果追溯规则。
+`algorithm_version` 标识实际使用的FSRS模型、参数配置与本轮评分映射，MVP已启用；完成结果与更新后的当前状态保存同一版本。实施时锁定具体实现和参数配置并保留对应配置，不能只填写“FSRS”而无法追溯，也不自行引入未确定的个性化训练或版本兼容分支。
 
 # 5. 后续扩展字段：按功能启用
 
@@ -409,7 +416,7 @@ Better Auth 数据库与Schema生成 · 会话管理 · 微信网站登录
   | `qualified_at` | timestamptz | NULL | 受邀者达到邀请奖励条件的时间 |
   | `qualification_evidence` | jsonb | NULL | 服务端核定的条件、日期、卡片数证据 |
 
-  约束与索引：UNIQUE(campaign_id,user_id)；FK(campaign_id,invite_code_id) → invite_codes(campaign_id,id)。CHECK inviter_user_id IS NULL OR inviter_user_id<>user_id；邀请人由服务端从邀请码确定，不接受前端任意指定。 增加 UNIQUE(campaign_id,id)，供活动归属复合外键引用。
+  约束与索引：UNIQUE(campaign_id,user_id)；全局部分唯一索引(user_id) WHERE inviter_user_id IS NOT NULL，同一受邀用户跨活动也只能有一次邀请归因；FK(campaign_id,invite_code_id) → invite_codes(campaign_id,id)。CHECK inviter_user_id IS NULL OR inviter_user_id<>user_id；邀请人由服务端从邀请码确定，不接受前端任意指定。 增加 UNIQUE(campaign_id,id)，供活动归属复合外键引用。
 
   ## user_entitlements · 当前权益与额度
 
@@ -418,7 +425,7 @@ Better Auth 数据库与Schema生成 · 会话管理 · 微信网站登录
   | `user_id` | uuid | PK；FK users | 权益归属 |
   | `sync_expires_at` | timestamptz | NULL | 无权益或有效截止时间 |
   | `max_cards` | integer | 必填 | 可同步卡片数量上限；试用规划100 |
-  | `max_card_chars` | integer | 必填 | 单张卡片字数上限；试用规划1000 |
+  | `max_card_chars` | integer | 必填 | 标题、补充内容、参考答案合计字符上限；试用1000，按第8.1节计数 |
   | `ai_available_units` | bigint | 默认0 | 未占用AI额度；AI接入时新增列 |
   | `ai_reserved_units` | bigint | 默认0 | 处理中预占AI额度；AI接入时新增列 |
   | `voice_available_seconds` | bigint | 默认0 | 未占用语音秒数；语音接入时新增列 |
@@ -445,7 +452,7 @@ Better Auth 数据库与Schema生成 · 会话管理 · 微信网站登录
   | `sync_expires_after` | timestamptz | NULL | 变更后的同步截止时间 |
   | `applied_at` | timestamptz | 默认 now() | 已成功入账时间 |
 
-  约束与索引：一笔发放和当前权益更新同事务提交；只记录成功发放，无半完成状态。trial/referral/milestone 必须有关联活动和成员且无订单；payment 必须有关联订单且无活动/成员，收费迁移时加条件CHECK。referral 的唯一键包含活动、受益人和受邀者，milestone 包含活动和受益人，payment 使用订单ID。member_id 必须属于 campaign_id；付费上线后 FK(user_id,order_id) → payment_orders(user_id,id)。 增加 UNIQUE(user_id,id)；FK(campaign_id,member_id) → campaign_members(campaign_id,id)，member_id 非空时 campaign_id 必须非空。 收费阶段增加 order_id 非空的部分唯一索引，保证一订单至多一份权益包。
+  约束与索引：一笔发放和当前权益更新同事务提交；只记录成功发放，无半完成状态。trial/referral/milestone 必须有关联活动和成员且无订单；payment 必须有关联订单且无活动/成员，收费迁移时加条件CHECK。referral 的全局唯一幂等键为 referral:受邀者user_id，不因更换活动或邀请人重复发奖；milestone 包含活动和受益人，payment 使用订单ID。member_id 必须属于 campaign_id；付费上线后 FK(user_id,order_id) → payment_orders(user_id,id)。 增加 UNIQUE(user_id,id)；FK(campaign_id,member_id) → campaign_members(campaign_id,id)，member_id 非空时 campaign_id 必须非空。 收费阶段增加 order_id 非空的部分唯一索引，保证一订单至多一份权益包。
 
 - AI与语音：2张表
 
@@ -578,48 +585,48 @@ ALTER TABLE review_logs
 | 分类筛选 | cards(user_id,category) 的未删除记录部分索引；无分类使用IS NULL。 |
 | 标签筛选 | 数组包含使用 tags @> ARRAY['React']::text[]；需要时建立 GIN(tags) WHERE deleted_at IS NULL，并始终带user_id条件。多个标签按全部包含还是任一命中由产品定义。 |
 | 分类/标签列表 | 只读本人未删除卡片；category做DISTINCT，tags经unnest后DISTINCT。 |
-| 精确导入去重 | cards(user_id,content_hash) 的未删除记录部分唯一索引。 |
+| 标题导入去重 | cards(user_id,title_hash) 的未删除记录部分唯一索引；题干/答案不同也不绕过同标题限制。 |
 | 当天/近7日/日历 | review_logs(user_id,reviewed_at)；按北京时间折算起止时间，并筛event_type='card_completed'。未来反馈日志不混入完成数量。 |
 | 当前轮进度 | 分母为本地本轮实际选中卡片数，分子为本地已完成卡片数；修改设置或继续新轮不会重写当前轮。 |
 | 分页 | 服务端分页、固定排序加ID兜底；内容包含查询在本用户数据范围内执行，规模上来再评估全文/pg_trgm索引。 |
 
 ## 6.4 卡片去重与编辑版本
 
-保留原稿建议：仅对“标题 + 题干 + 参考答案完全一致”做精确内容去重。统一换行与外层空白，保留代码内部空格和大小写。分类、标签不参与摘要。
+只对标题去重。沿用换行统一、首尾空白去除的规范化方式，保留标题内部空格和大小写；题干、参考答案、分类与标签均不参与title_hash。
 
-同用户才去重，重复导入跳过、不覆盖；同内容不同参考答案允许保留。这个重复口径仍需确认。编辑时使用 cards.version 条件更新，版本不符提示冲突，不自动覆盖。
+同用户才去重，同标题重复导入跳过、不覆盖，即使题干或参考答案不同也视为重复；编辑标题同样校验未删除卡片的标题唯一性。编辑时使用 cards.version 条件更新，版本不符提示冲突，不自动覆盖；改卡只更新内容版本，不重置温习状态和排期。
 
 # 7. 本地轮内温习与持久化结果
 
 ## 7.1 开始一轮与数量设置
 
-读取 user_settings.review_batch_size（默认10），结合本轮分类/标签筛选选出卡片。返回实际卡片集合及round_id，本地固定这一轮的实际数量与队列。可选卡片不足时按实际数量出卡；零卡片不开始轮次。
+读取用户主动保存的 user_settings.review_batch_size；无记录则读取当前全局默认值（当前10，后续改为20则未设置用户的新轮使用20），结合本轮分类/标签筛选选出卡片。返回实际卡片集合、round_id与服务端确定的开始自然日（Asia/Shanghai），本地固定这一轮的实际数量与队列；开始自然日与用户、round_id绑定，由服务端校验，不直接信任客户端自报日期。校验所需轮次元信息不包含轮内队列或点击明细。可选卡片不足时按实际数量出卡；零卡片不开始轮次。
 
 设置保存的是“以后每轮出多少张”，不是每日计划或历史轮次快照。修改设置只作用于新轮次，不改变正在进行这一轮的分母。当前轮的跨端续答、每日首轮分母同步不在本次范围。
 
 ## 7.2 轮内动作留在本地
 
-熟知、模糊、忘记带来的重复出卡、剩余熟知次数和排序由客户端维护。首次熟知本轮移出；首次模糊需再熟知2次；忘记后重置为再熟知3次。反复模糊、30天阶段后忘记的降级仍待确认。
+熟知、模糊、忘记带来的重复出卡、剩余熟知次数和排序由客户端维护。首次熟知本轮移出；首次模糊需再熟知2次；忘记后重置为再熟知3次。以上是本地轮内练习规则，不再据此划分1/7/30天长期阶段；长期状态和间隔统一由FSRS更新。
 
 不把每次点击提交给服务端复算，不保存轮内计数，不签发用于验证整套轮内动作的队列凭据。**每张卡完成本轮即可提交一次，不等待整轮全部卡片结束。**
 
-review_logs.rating 建议记录“这张卡在本轮出现过的最困难反馈”，优先级 forgot > fuzzy > known，避免完成时最后一次必然是熟知导致历史丢失难度信息。它是完成结果的摘要，不是熟知点击计数；间隔转换仍依已确认规则计算，不因这个摘要命名自动新增算法规则。
+review_logs.rating 按第11节已确认的本轮汇总口径保存：出现过任意一次忘记 → Again(1)；首次即熟知并完成 → Easy(4)；没有忘记且只点过一次模糊 → Good(3)；其余 → Hard(2)。按此顺序判断，以免忘记后的熟知覆盖Again，或把多次模糊误记为Good。该评分是本产品对一张卡本轮表现的汇总映射，不是逐次点击的标准FSRS评分；每张卡本轮完成且成功提交后，服务端只调用一次FSRS，不将轮内重复点击当作多次FSRS复习。
 
 ## 7.3 一张卡完成后的保存事务
 
 1. 先由 Better Auth 取得登录用户，按 user_id + 日志id查重。同一逻辑提交固定同一个id；命中且业务输入相同直接返回原结果，不重复推进。
 2. 按一致顺序锁cards行再锁card_review_states行，核验归属、未删除、card_version和客户端提交的期望状态version。冲突返回最新状态，让客户端确认，不静默覆盖。
-3. 服务端按当前阶段与已确认转换规则计算新的stage、next_review_at，version递增1；不接收客户端直接指定最终排期。
+3. 服务端检查轮次未跨Asia/Shanghai自然日，使用旧FSRS状态、上次温习时间、本次服务端受理时间与本轮汇总评分，计算新的S、D、stage、学习步骤及next_review_at，version递增1；不接收客户端直接指定最终记忆状态或排期。已存在的幂等提交仍先返回原结果，不因跨日重试重复计算。
 4. 插入一条 event_type='card_completed' 的review_logs，同时更新card_review_states，同事务提交。round_id+card_id的完成记录唯一约束可拦住同轮同卡换ID重复提交。
-5. 当前状态的last_rating、last_reviewed_at与本次完成结果一致；MVP不填写algorithm_version。客户端可以先更新界面，但必须显示保存失败并用原ID重试。
+5. 当前状态的last_rating、last_reviewed_at、algorithm_version与本次完成结果一致，日志保存更新前后的S/D。客户端可以先更新界面，但必须显示保存失败并用原ID重试；跨日未受理的旧轮提交不再补传。
 
 version解决并发覆盖，日志ID及同轮唯一约束解决重复提交；二者不能互相替代。自评摘要是客户端上报的学习结果，不声称服务端已经核验每次轮内点击。
 
 ## 7.4 中途退出：本次行为与未来扩展
 
-**MVP：** 未完成卡片的点击不写review_logs，也不改变长期状态。已完成卡片的结果照常保存；尚未完成的旧卡仍按原排期选取，新卡仍作为新卡。此时没有恢复其轮内计数的承诺，也不用在退出时补写一个虚构完成结果。
+**MVP：** 未完成卡片的点击不写review_logs，也不改变长期状态。已完成卡片的结果照常保存；尚未完成的旧卡仍按原排期选取，新卡仍作为新卡。跨Asia/Shanghai自然日的旧轮次作废当没练，客户端丢弃旧队列和计数，服务端拒绝尚未受理的旧轮新提交；不恢复旧轮，也不补写虚构完成结果。旧轮中此前已成功上传的完成记录是否需要追溯撤销，答案尚未明确；本版不自行新增日志删除或排期回滚机制。
 
-**未来预留：** review_logs.event_type 可区分 feedback 和 card_completed。若以后开启未完成反馈历史，每次实际反馈使用独立日志ID，记录用户、card_id、card_version、round_id、rating和reviewed_at；阶段、排期与state_version_after为空。feedback的rating是单次实际反馈，与card_completed的本轮摘要按类型区分。
+**未来预留：** review_logs.event_type 可区分 feedback 和 card_completed。若以后开启未完成反馈历史，每次实际反馈使用独立日志ID，记录用户、card_id、card_version、round_id、rating和reviewed_at；FSRS状态、S/D、排期、algorithm_version与state_version_after为空。feedback的rating是单次实际反馈known/fuzzy/forgot，与card_completed的FSRS汇总评分按类型区分。
 
 同一轮同一卡可有多条feedback，只能有一条card_completed；唯一索引仅约束后者。中途退出后已有feedback可留历史，但不等于能恢复完整队列。统计和奖励查询只统计card_completed，避免把未完成反馈当完成；将来若需要“尝试过但未完成”的统计，单独查询feedback。
 
@@ -627,9 +634,9 @@ version解决并发覆盖，日志ID及同轮唯一约束解决重复提交；�
 
 ## 7.5 统计口径
 
-完成数量按card_completed记录统计；当天温习过的不同卡片数按card_id去重。连续温习建议按“当天至少完成一张卡片”判断，活动的连续3天和10张熟知需另按rule_snapshot确认，不直接拿这个建议口径发奖。
+完成数量按已成功上传的card_completed记录统计；当天温习过的不同卡片数按card_id去重。温习日按Asia/Shanghai自然日，连续温习按有完成记录的连续自然日统计；奖励中的“熟知”以本轮完成且成功上传为准，不要求FSRS达到某个阶段或R阈值，见第8节。
 
-掌握分公式未确定，先从字符串stage、last_rating及历史派生；review_30d仅表示30天阶段，不表示永不遗忘。删除卡片不抹掉既有完成历史。按服务端受理时间归日，迟到重试不伪造旧日期，轮次跨日的具体交互仍需确认。
+掌握分=FSRS当前R×100，例如R=90%显示90分；R根据当前时间、记忆状态和对应算法参数计算，随时间变化，不另存一份固定分数。该分数按已确认口径命名为“掌握分”，含义是当前预测回忆概率。改卡不重置温习进度，删除卡片不抹掉既有完成历史。按服务端受理时间归日；跨日旧轮作废，不接受未受理完成结果跨日补传，已受理请求的幂等重试仍返回原记录。
 
 # 8. 邀请、奖励与同步额度
 
@@ -637,25 +644,27 @@ version解决并发覆盖，日志ID及同轮唯一约束解决重复提交；�
 
 注册账户和取得内测资格是两件事。用户首次微信登录可建账户；是否允许开始云端业务，再检查 campaign_members 与权益。邀请码有效性、活动总名额、码使用次数、入选记录和试用发放须同事务处理；锁活动行及邀请码行，杜绝并发超发。
 
-试用卡片数100、单张卡片1000字、1个月是现有规划，以活动规则快照配置；不作为永久数据库常量。1000字是否包含标题/题干/答案、Unicode计数方式仍待确认。
+试用卡片数100、单张卡片最多1000个字符、1个月，以活动规则快照配置，不作为永久数据库常量。字符数为标题、补充内容、参考答案各自计数后相加，分类和标签不计；先将CRLF/CR统一为LF，空格和每个换行各算1；按Unicode扩展字素簇计数，一个完整emoji（包括组合序列）算1，不按UTF-16长度或字节数计数。服务端为最终校验，前后端保持相同分段规则。邀请码最大使用人数仍待确定。
 
 ## 8.2 发奖幂等与前100名
 
-受邀者何时“达标”按 rule_snapshot 由服务端核验。邀请人的奖励唯一键可用“活动 + 邀请人 + 受邀者 + referral”；达标奖用“活动 + 用户 + milestone”。不按分享点击次数直接发奖。
+受邀者何时“达标”按 rule_snapshot 由服务端核验，具体达标条件仍待补齐。同一受邀用户全局只能归因一次，不因换活动、换邀请码或换邀请人重新归因；归因与发奖由数据库唯一约束及事务校验。邀请奖使用全局唯一键 referral:受邀者user_id；达标奖用“活动 + 用户 + milestone”。不按分享点击次数直接发奖，识别归因以服务端已验证账户身份为准。
 
-领取达标奖时锁活动，先查是否已发，再检查剩余名额；写一份 entitlement_grants、更新用户权益和已领取人数，同事务提交。同步与语音若属于同一次奖励，放同一份 benefits_snapshot，不重复占两个获奖名额。
+领取达标奖时锁活动，先查是否已发，再检查剩余名额；写一份 entitlement_grants、更新用户权益和已领取人数，同事务提交。MVP不发放语音奖励；后续若同步与语音属于同一次奖励，放同一份 benefits_snapshot，不重复占两个获奖名额。
 
-“10张卡片熟知”需明确是10张不同卡片、完成一次本轮，还是到某个长期阶段；连续3天的口径也待定。qualification_evidence 保存核验时的规则和事实，不能只留一个 qualified=true。
+“熟知”已确定为卡片本轮完成且成功上传，按card_completed核验，不按轮内熟知点击次数、FSRS阶段或掌握分阈值判断；连续3天按Asia/Shanghai连续自然日检查完成记录。“10张”是否要求不同card_id尚未进一步明确，不自行把同一卡重复完成当作10张发奖。qualification_evidence 保存核验时的规则、自然日和卡片完成事实，不能只留一个 qualified=true。
 
 ## 8.3 同步时间与卡片数量上限
 
-邀请奖励“加1个月”和达标奖“延到3个月”不是同一操作。先由规则解析出具体截止时间，再落 benefits_snapshot 和前后截止时间。三个月从入选还是领奖起算、能否叠加、一个月按自然月还是固定天数，待确认。
+邀请奖励“加1个月”和达标奖“延到3个月”按已确认规则允许叠加；各次奖励独立幂等发放，锁用户权益行，基于当前权益和规则计算变更，不用后一次较短截止时间覆盖已取得权益。具体截止时间落 benefits_snapshot 与前后截止时间；三个月从入选还是领奖起算、一个月按自然月还是固定天数，答案尚未明确，继续标为待定。
 
 创建卡片或导入时锁用户权益行，统计本人未删除卡片后校验上限；两笔同时导入不能各自绕过限额。具体导入失败策略待确认：建议首版整批校验通过后事务写入，返回重复项，不静默截断。
 
-同步到期不删除用户数据；到期后可读、导出、编辑、复习各自开放到什么程度，需补充产品边界，不能只凭一个 expires_at 就自行决定。
+同步到期不删除用户数据；到期后的可读、导出、编辑、复习边界与支付、退款政策均不在MVP范围，待收费功能启用时再确定，不能只凭一个 expires_at 自行决定。
 
 # 9. AI、语音与计费扩展
+
+AI、语音、计量、到期服务边界与支付均已确定不纳入MVP；本节保留原有后续扩展方案，不要求首发实现，也不把本节待定细节作为MVP前置条件。
 
 ## 9.1 卡片修改不篡改历史
 
@@ -663,7 +672,7 @@ version解决并发覆盖，日志ID及同轮唯一约束解决重复提交；�
 
 一次系统逻辑任务使用固定 `ai_jobs.id` 和幂等键。模型返回后再次核验用户、作答与任务关系，只把合法成功结果写入 answer_attempts。失败不把 has_error/has_omission 写成 false。
 
-错题列表建议取每张卡片“当前卡片版本下最近一次成功评判”的作答，按 submitted_at、id稳定排序；has_error 或 has_omission 为 true 则进入错题模式。改卡后旧评语仍可回顾，但不继续作为新版本错题判断。AI结果暂不自动改变自评与间隔，等待产品规则确认。
+错题列表建议取每张卡片“当前卡片版本下最近一次成功评判”的作答，按 submitted_at、id稳定排序；has_error 或 has_omission 为 true 则进入错题模式。改卡后旧评语仍可回顾，但不继续作为新版本错题判断。AI不在MVP范围；后续是否影响自评与FSRS间隔，届时再确定。
 
 ## 9.2 额度预占、结算与退款边界
 
@@ -683,48 +692,38 @@ version解决并发覆盖，日志ID及同轮唯一约束解决重复提交；�
 - 分类和标签是卡片字段。删除分类值即将匹配卡片的category置空；删除标签值即从匹配卡片的tags数组移除该值，始终限定当前用户，按卡片编辑规则更新version/updated_at。
 - 云同步首版采用服务端为准的重新拉取和版本校验；不因有updated_at就宣称已有完整增量同步。离线/增量同步要另外设计稳定变更序列、删除墓碑保留与游标协议。
 - 导入/导出不单独建历史表；AI导入异步调用复用ai_jobs。未来需要断点导入、逐条纠错报告时再加导入批次/明细表。
-- Better Auth 固定版本、适配器及配置后生成鉴权schema，纳入项目版本化迁移；业务迁移先建user_settings/cards/card_review_states/review_logs。MVP不启用algorithm_version与feedback日志。
+- Better Auth 固定版本、适配器及配置后生成鉴权schema，纳入项目版本化迁移；业务迁移先建user_settings/cards/card_review_states/review_logs。MVP启用FSRS状态和algorithm_version，不启用feedback日志。
 - 后续按邀请、AI、收费阶段加表/加列。未完成反馈历史只需在已预留的类型与约束上启用业务流程；如果未来要持久化完整轮次和队列，另行设计，不把反馈日志冒充队列。
 - 不在应用启动时隐式修改生产结构；新增约束前先检查存量数据。
 
-# 11. 实施前需要你拍板的规则
+# 11. 实施前需要拍板的规则
 
-| 事项 | 当前已知 | 还需确定 | 答案 |
-| --- | --- | --- | --- |
-| 算法 | 熟知/模糊/忘记；1/7/30天阶段 | 反复模糊、30天阶段后忘记降级、间隔的精确时间口径。 | 改成FSRS算法，口径也是。 |
-| 每轮数量 | user_settings.review_batch_size，MVP默认10 | 可配置上限；默认值后续调整是否影响已保存设置。 | **只保存用户主动修改的数量**：用户没设置，就每次使用全局默认值；默认改成 20，之后每轮就出 20 张。 |
-| 统计 | 本地当前轮进度、掌握分、连续温习 | 掌握分公式；有效温习日定义；跨日的旧轮次交互；改卡是否重置温习进度。 |   1.
-2. 温习日，就是自然日
-3. 跨日的旧轮次，作废当没练
-4. 改卡不重置温习进度。 |
-   | 完成摘要 | rating建议记录本轮最困难反馈，轮内计数不入库 | 排期转换与完成摘要口径需与算法共同确认。 | 本轮选择最低的最为评分。
-   只要有1次忘记Again，
-   直接熟悉Easy，
-   只点过一次模糊Good，
-   其余都是Hard。
-   |
-   | 去重 | 重复不覆盖 | 是否采用本方案的精确内容去重，是否允许同一卡片内容但不同参考答案。 | 只对标题去重 |
-   | 内测 | 100张卡片、单张卡片1000字、1个月 | 字数覆盖范围/计数方式；邀请码的使用上限。 | 最多 1000 个字符。
-   如 标题、补充内容、参考答案合计；分类、标签不计。空格、换行各算 1，换行格式统一。一个完整 emoji 算 1 |
-   | 邀请奖 | 受邀者达标后加1个月 | 达标条件；同一受邀者是否只能归因一次（本方案按每活动一次）。 | 同一受邀者绝对只能归因一次，避免任何薅羊毛等资损漏洞。 |
-   | 达标奖 | 10张卡片熟知+连续3天，前100名，延至3个月 | 熟知的判定；三个月起算点；叠加规则；语音30分钟适用名额。 | 熟知的判定，本轮完成且上传后作数。
-   奖励可叠加。 |
-   | AI/语音 | 文字默认；语音确认后评判；有加量包 | 评级分档、计量单位、扣费/失败/过期规则；是否影响间隔。 | mvp暂不考虑 |
-   | 到期与支付 | 内测后收费，纯同步暂定5元/月 | 到期后的服务边界；支付方式；退款与额度政策。 | mvp暂不考虑 |
+| 事项 | 待拍板的具体问题 |
+| --- | --- |
+| 每轮数量上限 | 用户可配置的每轮卡片数量，最大允许多少张？ |
+| 邀请码使用上限 | 单个邀请码最多允许多少名用户使用？ |
+| 跨日旧轮的已上传结果 | 旧轮作废后，其中此前已成功上传的完成记录和排期是否需要追溯撤销？ |
+| 邀请奖触发条件 | 受邀者达到什么条件后，向邀请人发放奖励？ |
+| 达标奖卡片计数 | “10张卡片”是否必须是10张不同的卡片？ |
+| 奖励时间口径 | 达标奖的3个月从入选还是领奖起算？奖励中的1个月、3个月按自然月还是固定天数计算？ |
 
 # 12. 验证清单
 
 - Better Auth 的用户、会话、账号、验证数据与生成schema一致；业务表user_id类型一致；业务归属由有效会话校验。
 - 分类/标签名称来自本用户未删除卡片，按分类和数组标签筛选有效，不再依赖独立分类/标签表。
-- 用户无设置时默认每轮10张；实际只有7张可选时出7张；修改设置不改变已开始轮次。
+- 无主动设置时每轮读取全局默认值，不自动落库；全局默认从10改为20后，未设置用户的新轮出20张，已主动设置的数量不变；实际只有7张可选时出7张；修改设置不改变已开始轮次。
 - 串改user_id或使用他人card_id：接口和复合外键均应拒绝。
 - 同一卡完成请求重发10次：只有一条card_completed和一次状态推进；同轮同卡换ID提交仍不能重复完成。
 - 两端同时保存同一卡：只有匹配version者成功；卡片已修改/删除时拒绝旧内容版本的完成结果。
 - MVP未完成就退出：无未完成反馈历史，不更新长期状态；已完成卡片保存不受影响。feedback类型在接口层明确拒绝。
-- stage使用字符串白名单；algorithm_version允许NULL且MVP不依赖它。
-- 后续启用feedback时：同轮多次反馈与单次完成可共存；feedback结果字段为空；完成数量和奖励不把feedback算进去。
+- FSRS调度状态使用字符串白名单；新卡S/D可空，完成后S/D、排期和algorithm_version齐全且范围合法；R与掌握分由当前时间实时计算，改卡不重置温习进度。
+- 后续启用feedback时：同轮多次反馈与单次完成可共存；feedback为原始三档反馈，完成记录为FSRS四档汇总，算法结果字段按类型判空；完成数量和奖励不把feedback算进去。
 - 到期查询的user_id冗余始终与cards所有者一致；执行计划比较两种查法后再确认性能收益。
-- 两人争最后一个奖励名额、重复受邀达标、并发导入冲击额度、支付回调或AI任务重试：不超发、不重复入账、不超限。
-- 修改参考答案后回顾历史：保留当时快照，旧评语不直接标记当前版本错题。
+- 两人争最后一个奖励名额、同一受邀者跨活动/换邀请码重复归因或达标、并发导入冲击额度：不超发、不重复入账、不超限；奖励叠加不覆盖已取得权益。支付回调与AI任务重试在相应后续阶段再验证。
+- 修改参考答案后回顾历史：保留当时快照，旧评语不直接标记当前版本错题；改卡不重置已有FSRS状态和排期。
+- 本轮出现忘记一律Again；首次直接熟知为Easy；无忘记且仅一次模糊为Good；其余Hard；同卡本轮完成只调用一次FSRS，不将轮内点击逐次更新。
+- 掌握分按R×100展示；温习日按Asia/Shanghai自然日。跨日旧轮作废，不补传未受理结果，已受理请求重复提交只返回原结果。
+- 同用户同标题的卡片，即使参考答案不同也去重；不同用户可同标题，编辑标题不能绕过唯一性。
+- 标题/补充内容/参考答案合计1000字符；空格、统一后的换行及完整emoji按已确认规则计数，前后端一致，分类和标签不计。
 
 以上为设计校验场景，未执行数据库集成测试；落地迁移时再验证。
