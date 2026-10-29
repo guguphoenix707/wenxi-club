@@ -13,8 +13,10 @@ const Stats = lazy(() => import('@/pages/stats'));
 export const router = createBrowserRouter([
   {
     Component: AppShell,
+    //FIXME 包含整个吗
     ErrorBoundary: ErrorPage,
     children: [
+      //FIXME 主页、添加页 ；加preload吗
       { index: true, Component: Dashboard },
       { path: '/questions/new', Component: NewQuestion },
       { path: '/review', Component: Review },
