@@ -3,7 +3,7 @@
 - 不使用 antd 或 @ant-design/*。优先原生语义元素、现有 CSS；组件库只在有明确需求时引入。
 - 使用 TypeScript strict；避免 any、无解释的类型断言和忽略类型错误。类型描述真实数据与状态，不为了抽象增加复杂泛型。
 - 页面负责组合与路由，复用组件负责展示，接口模块负责网络调用；不在页面内堆叠鉴权、数据转换和模型调用。
-- 保留 Next.js App Router 的 page.tsx、layout.tsx 等文件约定。交互组件需要时才声明 use client。
+- 使用 Vite + React Router SPA；路由映射集中在 src/router.tsx，页面放在 src/pages，共享布局使用 Outlet 组合。不使用 Next.js 文件路由或 use client 声明。
 - CSS 全局文件维护设计变量与基础样式；组件局部样式优先 CSS Modules。沿用现有视觉，不引入默认组件库主题。
 - 使用原生数组方法和 fetch 即可，不强制引入 lodash、axios 或 hooks 工具库。只有明确业务或复用收益时封装。
 - 异步界面明确处理加载、失败、空态；支持键盘操作、可访问标签和响应式布局。
