@@ -9,6 +9,7 @@ const NewQuestion = lazy(() => import('@/pages/questions/new'));
 const Review = lazy(() => import('@/pages/review'));
 const ImportQuestions = lazy(() => import('@/pages/import'));
 const Stats = lazy(() => import('@/pages/stats'));
+const TestStyle = lazy(() => import('@/pages/test-style'));
 
 export const router = createBrowserRouter([
   {
@@ -22,6 +23,7 @@ export const router = createBrowserRouter([
       { path: '/review', Component: Review },
       { path: '/import', Component: ImportQuestions },
       { path: '/stats', Component: Stats },
+      { path: '/test-style', Component: TestStyle },
       { path: '*', Component: NotFound },
     ],
   },

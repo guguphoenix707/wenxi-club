@@ -11,6 +11,7 @@ React 19 + TypeScript + Vite + React Router SPA。`src/main.tsx` 是浏览器入
 | `/review` | `review.tsx` |
 | `/import` | `import.tsx` |
 | `/stats` | `stats.tsx` |
+| `/test-style` | `test-style.tsx`（公共组件展示预留空页） |
 | 其他路径 | `not-found.tsx` |
 
 页面通过 React.lazy 按需加载；共享布局提供导航、加载状态和滚动恢复，React Router 提供错误边界。
