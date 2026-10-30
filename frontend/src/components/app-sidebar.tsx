@@ -27,7 +27,7 @@ function currentNavLabel(pathname: string) {
 }
 
 export function AppSidebar() {
-  const { setOpenMobile } = useSidebar();
+  const { setOpenMobile, open } = useSidebar();
   const location = useLocation();
 
   useEffect(() => {
@@ -35,12 +35,18 @@ export function AppSidebar() {
   }, [location.pathname, setOpenMobile]);
 
   return (
-    <Sidebar className="app-sidebar" collapsible="offcanvas">
+    <Sidebar className="app-sidebar" collapsible="icon">
       <SidebarHeader className="app-sidebar-header">
         <Link to="/" className="brand">
           温习社
           <small>把模糊变熟悉</small>
         </Link>
+        <SidebarTrigger
+          className="desktop-sidebar-toggle"
+          aria-label={open ? '收起侧边栏' : '展开侧边栏'}
+          aria-expanded={open}
+          title={open ? '收起侧边栏' : '展开侧边栏'}
+        />
         <button type="button" className="sidebar-close" onClick={() => setOpenMobile(false)} aria-label="关闭导航菜单">
           ×
         </button>
@@ -76,10 +82,16 @@ export function AppSidebar() {
 
 export function MobileHeader() {
   const { pathname } = useLocation();
+  const { openMobile } = useSidebar();
 
   return (
     <header className="mobile-header">
-      <SidebarTrigger className="mobile-menu-button" aria-label="打开导航菜单" />
+      <SidebarTrigger
+        className="mobile-menu-button"
+        aria-label={openMobile ? '收起侧边栏' : '展开侧边栏'}
+        aria-expanded={openMobile}
+        title={openMobile ? '收起侧边栏' : '展开侧边栏'}
+      />
       <div className="mobile-header-title">
         <strong>温习社</strong>
         <small>{currentNavLabel(pathname)}</small>
