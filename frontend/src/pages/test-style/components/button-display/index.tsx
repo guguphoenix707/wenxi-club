@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, BookOpenCheck, LoaderCircle, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import styles from './test-style.module.css';
+import styles from './button-display.module.css';
 
 const variants = [
   ['default', '主要按钮', '页面的主要操作'],
@@ -14,13 +14,24 @@ const variants = [
 const sizes = ['xs', 'sm', 'default', 'lg'] as const;
 const iconSizes = ['icon-xs', 'icon-sm', 'icon', 'icon-lg'] as const;
 
-export default function TestStyle() {
+export function ButtonDisplay() {
   const [feedback, setFeedback] = useState('点击按钮查看反馈，也可以按 Tab 检查键盘焦点。');
+  const [loading, setLoading] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (timer.current !== null) clearTimeout(timer.current); }, []);
+  function demonstrateLoading() {
+    if (timer.current !== null) return;
+    setLoading(true);
+    setFeedback('正在演示加载状态…');
+    timer.current = setTimeout(() => {
+      timer.current = null;
+      setLoading(false);
+      setFeedback('加载演示完成，可以再次体验。');
+    }, 1500);
+  }
   const announce = (name: string) => setFeedback(`已点击「${name}」示例。`);
 
   return <div className={styles.showcase}>
-    <title>按钮展示 · 面试温习社</title>
-    <meta name="robots" content="noindex, nofollow" />
     <header>
       <p className="eyebrow">COMPONENTS / BUTTON</p>
       <h1>按钮展示</h1>
@@ -57,6 +68,27 @@ export default function TestStyle() {
         <Button type="button" onClick={() => announce('开始温习')}><BookOpenCheck data-icon="inline-start" aria-hidden="true" />开始温习</Button>
         <Button type="button" variant="outline" onClick={() => announce('下一步')}>下一步<ArrowRight data-icon="inline-end" aria-hidden="true" /></Button>
       </div>
+    </section>
+    <section className={styles.section} aria-labelledby="loading-title">
+      <h2 id="loading-title">体验加载流程</h2>
+      <p>点击后模拟 1.5 秒等待，期间禁用按钮，完成后恢复。仅演示界面状态。</p>
+      <div className={styles.panel}>
+        <Button type="button" disabled={loading} aria-busy={loading} onClick={demonstrateLoading}>
+          {loading ? <LoaderCircle className={styles.spinner} aria-hidden="true" /> : <Plus aria-hidden="true" />}
+          {loading ? '正在添加…' : '模拟添加题目'}
+        </Button>
+      </div>
+    </section>
+    <section className={styles.section} aria-labelledby="usage-title">
+      <h2 id="usage-title">调用示例</h2>
+      <pre className={styles.code}><code>{`import { Button } from '@/components/ui/button';
+
+<Button type="button" onClick={handleClick}>开始温习</Button>
+<Button type="button" variant="outline" size="sm">取消</Button>
+<Button type="button" variant="destructive" disabled>删除</Button>
+<Button type="button" size="icon" aria-label="添加题目">
+  <Plus aria-hidden="true" />
+</Button>`}</code></pre>
     </section>
     <p className={styles.feedback} role="status" aria-live="polite" aria-atomic="true">{feedback}</p>
   </div>;
