@@ -18,10 +18,12 @@
   --accent-soft: #f8e7c3;
   --accent-ink: #98683a;
   --coral: #ef8580;
+  --orange: #f2ad4b;
   --green: #68ad80;
   --blue: #9dc8d5;
   --yellow: #f5d47c;
   --danger: #b65e5c;
+  --sidebar-surface: #fffcf5;
 
   /* Review-choice fills; these colors do not define memory stages. */
   --review-familiar: #cce6d2;

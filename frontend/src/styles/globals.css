@@ -5,39 +5,103 @@
   box-sizing: border-box
 }
 
+html {
+  background: var(--canvas)
+}
+
+html,
+body {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden
+}
+
 body {
   margin: 0;
-  background: var(--canvas);
   color: var(--ink);
-  font-family: system-ui, -apple-system, 'PingFang SC', sans-serif;
+  font-family: Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background-color: var(--canvas);
+  background-image: radial-gradient(#ded5c4 .75px, transparent .75px);
+  background-size: 18px 18px;
   line-height: 1.7
 }
 
 a {
   color: inherit;
-  text-decoration: none
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent
 }
 
 button {
-  font: inherit;
   cursor: pointer
 }
 
+:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--focus) 40%, transparent);
+  outline-offset: 3px
+}
+
 .shell {
-  min-height: 100vh
+  min-height: 100svh;
+  background: transparent
+}
+
+[data-slot="sidebar-inset"] {
+  min-width: 0;
+  background: transparent
+}
+
+[data-slot="sidebar-container"].app-sidebar {
+  border-right: var(--outline-width) solid var(--outline)
+}
+
+[data-sidebar="sidebar"] {
+  background: color-mix(in srgb, var(--sidebar-surface) 98%, transparent)
+}
+
+[data-sidebar="sidebar"][data-mobile="true"] {
+  border-right: var(--outline-width) solid var(--outline);
+  box-shadow: 14px 0 35px rgb(54 45 33 / 16%)
+}
+
+[data-slot="sheet-overlay"] {
+  background: rgb(41 45 38 / 38%);
+  backdrop-filter: blur(3px)
 }
 
 .app-sidebar-header {
   position: relative;
-  padding: 32px 20px 8px
+  padding: 34px 22px 14px
+}
+
+.app-sidebar-header .brand {
+  width: 100%;
+  padding: 0 9px 16px
 }
 
 .app-sidebar-content {
-  padding: 0 12px
+  padding: 0 14px
 }
 
 .app-sidebar-group {
   padding: 0
+}
+
+.app-sidebar-footer {
+  padding: 18px 22px 24px
+}
+
+.app-sidebar-footer .note {
+  margin-top: 0
 }
 
 [data-slot="sidebar-menu"] {
@@ -52,36 +116,50 @@ button {
 }
 
 .app-sidebar [data-slot="sidebar-menu-button"] {
-  min-height: 42px;
-  padding: 10px 16px;
-  border-radius: 10px
+  min-height: 49px;
+  padding: 0 14px;
+  border-radius: 13px;
+  color: #696a61;
+  font-size: 14px
 }
 
-.app-sidebar-footer {
-  padding: 8px 20px 28px
+.app-sidebar [data-slot="sidebar-menu-button"]:hover {
+  background: var(--accent-soft);
+  color: var(--ink)
 }
 
-.app-sidebar-footer .note {
-  margin-top: 0
+.app-sidebar [data-slot="sidebar-menu-button"][data-active] {
+  background: var(--accent);
+  color: var(--ink);
+  font-weight: 700;
+  box-shadow: 0 4px 0 #d88a38
 }
 
 .brand {
-  font-size: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 17px;
   font-weight: 700;
-  display: block
+  text-align: left
 }
 
 .brand small {
   display: block;
-  font-size: 13px;
-  color: var(--text-muted);
+  margin-top: 3px;
+  color: #8f8b7e;
+  font-size: 10px;
   font-weight: 400
 }
 
 .page {
-  padding: 56px clamp(24px, 5vw, 80px);
-  max-width: 1200px;
-  width: 100%
+  padding: 34px 42px 54px;
+  max-width: 1500px;
+  width: 100%;
+  margin: auto
 }
 
 .mobile-header,
@@ -90,12 +168,13 @@ button {
 }
 
 h1 {
-  font-size: 32px;
-  margin: 8px 0
+  font-size: 24px;
+  margin: 0;
+  letter-spacing: -.02em
 }
 
 h2 {
-  font-size: 21px
+  font-size: 17px
 }
 
 p {
@@ -104,34 +183,36 @@ p {
 
 .eyebrow {
   color: var(--accent-ink);
-  font-size: 13px
+  font-size: 10px;
+  letter-spacing: .13em;
+  margin: 0 0 8px
 }
 
 .panel {
   padding: 28px;
   background: var(--paper);
-  border: 1px solid var(--outline);
-  border-radius: 18px;
+  border: var(--outline-width) solid var(--outline);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-soft);
   margin-top: 30px
 }
 
 .button {
   display: inline-block;
+  min-height: 42px;
   padding: 10px 18px;
+  border: var(--outline-width) solid var(--ink);
   background: var(--ink);
   color: var(--paper);
-  border-radius: 10px;
-  margin-top: 12px
+  border-radius: var(--radius-control);
+  margin-top: 12px;
+  font-weight: 700;
+  box-shadow: var(--shadow-warm)
 }
 
 .note {
   font-size: 13px;
   margin-top: 28px
-}
-
-:focus-visible {
-  outline: 3px solid var(--focus);
-  outline-offset: 4px
 }
 
 .skip-link {
@@ -147,18 +228,37 @@ p {
   top: 12px
 }
 
+@media (max-width: 1199px) {
+  .page {
+    padding: 30px 26px 48px
+  }
+}
+
+@media (min-width: 768px) {
+  .app-sidebar-header {
+    padding: 28px 14px 24px
+  }
+
+  .app-sidebar-header .brand {
+    padding: 0;
+    font-size: 15px
+  }
+}
+
 @media (max-width: 767px) {
   .mobile-header {
     position: sticky;
     top: 0;
     z-index: 30;
     display: flex;
-    min-height: 64px;
+    min-height: 66px;
     align-items: center;
     gap: 12px;
     padding: max(10px, env(safe-area-inset-top)) 16px 10px;
-    border-bottom: 1px solid var(--outline);
-    background: color-mix(in srgb, var(--paper) 92%, transparent)
+    border-bottom: var(--outline-width) solid color-mix(in srgb, var(--outline) 90%, transparent);
+    background: color-mix(in srgb, var(--sidebar-surface) 92%, transparent);
+    box-shadow: 0 7px 22px rgb(80 62 35 / 7%);
+    backdrop-filter: blur(14px)
   }
 
   .mobile-menu-button {
@@ -167,13 +267,16 @@ p {
     flex: 0 0 42px;
     border: var(--outline-width) solid var(--ink);
     border-radius: var(--radius-control);
-    background: var(--accent);
+    background: var(--yellow);
     color: var(--ink);
     box-shadow: var(--shadow-offset-sm)
   }
 
   .mobile-header-title {
-    min-width: 0
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    justify-content: center
   }
 
   .mobile-header-title strong,
@@ -183,14 +286,15 @@ p {
 
   .mobile-header-title strong {
     overflow: hidden;
-    font-size: 15px;
+    font-size: 14px;
     text-overflow: ellipsis;
     white-space: nowrap
   }
 
   .mobile-header-title small {
-    color: var(--text-muted);
-    font-size: 12px
+    margin-top: 2px;
+    color: #91897d;
+    font-size: 9px
   }
 
   .app-sidebar-header {
@@ -211,7 +315,7 @@ p {
     place-items: center;
     border: var(--outline-width) solid var(--ink);
     border-radius: 11px;
-    background: var(--coral);
+    background: #f2aaa4;
     color: var(--ink);
     box-shadow: var(--shadow-offset-sm);
     font-size: 22px;
@@ -226,11 +330,27 @@ p {
     padding: 16px 18px calc(20px + env(safe-area-inset-bottom))
   }
 
+  .app-sidebar [data-slot="sidebar-menu-button"] {
+    min-height: 50px
+  }
+
   .page {
-    padding: 28px 20px
+    padding: 22px 16px 42px
   }
 
   h1 {
-    font-size: 27px
+    font-size: clamp(20px, 6vw, 25px);
+    line-height: 1.3
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important
   }
 }
