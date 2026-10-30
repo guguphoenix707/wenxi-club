@@ -3,8 +3,8 @@
 - frontend/index.html：SPA 的 HTML 入口与基础元信息。
 - frontend/src/main.tsx：React 挂载入口。
 - frontend/src/router.tsx：React Router 的集中路由映射与错误边界。
-- frontend/src/pages：今日总览、温习、添加题目、导入、统计页面，以及错误、404 页面。
-- frontend/src/components：导航与展示组件。
+- frontend/src/pages：今日总览、温习、添加题目、导入、统计、登录页面，以及错误、404 页面。登录页独立于应用壳。
+- frontend/src/components：导航与展示组件。`components/ui` 是 shadcn 源文件，不改外观；产品主题写在 `components/common`，包装 `components/ui`。
 - frontend/src/styles：全局设计变量与基础样式。
 - frontend/src/features：业务模块，按实际功能逐步实现。
 - frontend/src/lib/api：前端 HTTP 边界。

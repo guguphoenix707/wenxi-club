@@ -5,6 +5,7 @@
 - 页面负责组合与路由，复用组件负责展示，接口模块负责网络调用；不在页面内堆叠鉴权、数据转换和模型调用。
 - 使用 Vite + React Router SPA；路由映射集中在 src/router.tsx，页面放在 src/pages，共享布局使用 Outlet 组合。不使用 Next.js 文件路由或 use client 声明。
 - CSS 全局文件维护设计变量与基础样式；组件局部样式优先 CSS Modules。沿用现有视觉，不引入默认组件库主题。
+- 不修改 `components/ui` 源文件，避免和 shadcn 上游难以区分。改默认样式：新增 CSS 再引入，或在 `components/common/` 包装 `components/ui/`。页面引用 `common`，不直接改 `ui`。`styles/shadcn.css` 只做 token 映射。
 - 使用原生数组方法和 fetch 即可，不强制引入 lodash、axios 或 hooks 工具库。只有明确业务或复用收益时封装。
 - 异步界面明确处理加载、失败、空态；支持键盘操作、可访问标签和响应式布局。
 - 不在浏览器调用需要私密密钥的模型 API；接口返回值在边界验证，不默默修正后端业务数据。
