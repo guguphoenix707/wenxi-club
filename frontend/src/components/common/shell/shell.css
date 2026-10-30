@@ -1,0 +1,41 @@
+.shell {
+  min-height: 100svh;
+  background: transparent
+}
+
+[data-slot="sidebar-inset"] {
+  min-width: 0;
+  background: transparent
+}
+
+.page {
+  padding: 34px 42px 54px;
+  max-width: 1500px;
+  width: 100%;
+  margin: auto
+}
+
+.skip-link {
+  position: absolute;
+  z-index: 60;
+  left: 12px;
+  top: -100px;
+  background: var(--paper);
+  padding: 10px
+}
+
+.skip-link:focus {
+  top: 12px
+}
+
+@media (max-width: 1199px) {
+  .page {
+    padding: 30px 26px 48px
+  }
+}
+
+@media (max-width: 767px) {
+  .page {
+    padding: 22px 16px 42px
+  }
+}

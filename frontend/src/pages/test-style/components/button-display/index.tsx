@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, BookOpenCheck, LoaderCircle, Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/common/button';
 import styles from './button-display.module.css';
 
 const variants = [
@@ -81,7 +81,7 @@ export function ButtonDisplay() {
     </section>
     <section className={styles.section} aria-labelledby="usage-title">
       <h2 id="usage-title">调用示例</h2>
-      <pre className={styles.code}><code>{`import { Button } from '@/components/ui/button';
+      <pre className={styles.code}><code>{`import { Button } from '@/components/common/button';
 
 <Button type="button" onClick={handleClick}>开始温习</Button>
 <Button type="button" variant="outline" size="sm">取消</Button>

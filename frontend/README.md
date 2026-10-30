@@ -6,7 +6,7 @@ React 19 + TypeScript + Vite + React Router SPA。`src/main.tsx` 是浏览器入
 
 `src/styles/theme.css` 维护一层产品 token，按画布与纸面、墨色与辅助文字、轮廓与焦点、强调与反馈组织。每种色值只定义一次：正文、深色主按钮与深色描边复用 `--ink`；卡片、浮层和反白文字复用 `--paper`；普通轮廓与加强轮廓使用 `--outline`、`--outline-strong`，不以 input 等组件类型命名。
 
-`globals.css` 消费这些变量。正式主题不混入 foreground、primary 等框架别名，不按侧栏、图表重复定义同色变量。`/design-token` 属于原型项目，正式项目只保留主题；原型如需对接 shadcn，在展示页局部适配其接口变量。
+`globals.css` 消费这些变量。正式主题不混入 foreground、primary 等框架别名，不按侧栏、图表重复定义同色变量。shadcn 源文件在 `components/ui`，产品外观由 `components/common` 包装后引入。`/design-token` 属于原型项目，正式项目只保留主题。
 
 ## 路由
 
@@ -18,7 +18,7 @@ React 19 + TypeScript + Vite + React Router SPA。`src/main.tsx` 是浏览器入
 | `/import` | `import.tsx` |
 | `/stats` | `stats.tsx` |
 | `/login` | `login.tsx`（独立于应用壳，微信扫码登录） |
-| `/test-style` | `test-style.tsx`（公共组件展示预留空页） |
+| `/test-style` | `test-style/index.tsx`（公共按钮的变体、状态、尺寸与图标展示） |
 | 其他路径 | `not-found.tsx` |
 
 页面通过 React.lazy 按需加载；共享布局提供导航、加载状态和滚动恢复，React Router 提供错误边界。

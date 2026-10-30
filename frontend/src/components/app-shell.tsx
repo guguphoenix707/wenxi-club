@@ -4,6 +4,7 @@ import { AppSidebar, MobileHeader } from './app-sidebar';
 import { Loading } from './loading';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import '@/components/common/shell/shell.css';
 
 export function AppShell() {
   return (

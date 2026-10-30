@@ -13,6 +13,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar';
+import '@/components/common/sidebar/sidebar.css';
 
 export const navigationItems = [
   { to: '/', label: '今日总览' },

@@ -1,0 +1,164 @@
+/* Product Button appearance. Scoped to the common wrapper; ui/button stays untouched. */
+
+[data-slot="button"][data-type="standard"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    filter 140ms ease,
+    translate 100ms ease,
+    background-color 140ms ease,
+    color 140ms ease,
+    box-shadow 140ms ease
+}
+
+[data-slot="button"][data-type="standard"][data-variant="default"] {
+  min-height: 42px;
+  padding: 0 18px;
+  border: var(--outline-width) solid var(--ink);
+  border-radius: var(--radius-control);
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: var(--shadow-warm)
+}
+
+[data-slot="button"][data-type="standard"][data-variant="default"]:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: color-mix(in srgb, var(--ink) 85%, var(--paper))
+}
+
+[data-slot="button"][data-type="standard"][data-variant="outline"],
+[data-slot="button"][data-type="standard"][data-variant="secondary"] {
+  min-height: 34px;
+  padding: 0 13px;
+  border: var(--outline-width) solid var(--ink);
+  border-radius: var(--radius-lg);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: var(--shadow-offset-sm)
+}
+
+[data-slot="button"][data-type="standard"][data-variant="outline"]:hover:not(:disabled):not([aria-disabled="true"]),
+[data-slot="button"][data-type="standard"][data-variant="secondary"] {
+  background: var(--accent-soft);
+  color: var(--ink)
+}
+
+[data-slot="button"][data-type="standard"]:is([data-variant="ghost"], [data-variant="link"], [data-variant="destructive"]) {
+  border: 0;
+  background: transparent;
+  box-shadow: none
+}
+
+[data-slot="button"][data-type="standard"][data-variant="ghost"] {
+  color: var(--accent-ink);
+  font-size: 11px;
+  font-weight: 700
+}
+
+[data-slot="button"][data-type="standard"][data-variant="ghost"]:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--accent-soft)
+}
+
+[data-slot="button"][data-type="standard"][data-variant="link"] {
+  color: var(--accent-ink);
+  font-size: 11px
+}
+
+[data-slot="button"][data-type="standard"][data-variant="link"]:hover:not(:disabled):not([aria-disabled="true"]) {
+  text-decoration: underline
+}
+
+[data-slot="button"][data-type="standard"][data-variant="destructive"] {
+  color: var(--danger);
+  font-size: 11px
+}
+
+[data-slot="button"][data-type="standard"][data-variant="destructive"]:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: color-mix(in srgb, var(--danger) 16%, var(--paper))
+}
+
+[data-slot="button"][data-type="standard"] svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0
+}
+
+[data-slot="button"][data-type="standard"][data-size="xs"] {
+  min-height: 24px;
+  height: 24px;
+  padding: 0 8px;
+  font-size: 10px
+}
+
+[data-slot="button"][data-type="standard"][data-size="sm"] {
+  min-height: 28px;
+  height: 28px;
+  padding: 0 10px;
+  font-size: 11px
+}
+
+[data-slot="button"][data-type="standard"][data-size="lg"] {
+  min-height: 46px;
+  height: 46px;
+  padding: 0 22px;
+  font-size: 14px
+}
+
+[data-slot="button"][data-type="standard"][data-size^="icon"] {
+  width: 32px;
+  min-height: 32px;
+  height: 32px;
+  padding: 0
+}
+
+[data-slot="button"][data-type="standard"][data-size="icon-xs"] {
+  width: 24px;
+  min-height: 24px;
+  height: 24px
+}
+
+[data-slot="button"][data-type="standard"][data-size="icon-sm"] {
+  width: 28px;
+  min-height: 28px;
+  height: 28px
+}
+
+[data-slot="button"][data-type="standard"][data-size="icon-lg"] {
+  width: 40px;
+  min-height: 40px;
+  height: 40px
+}
+
+@media (hover: hover) {
+  [data-slot="button"][data-type="standard"]:not(:disabled):not([aria-disabled="true"]):hover {
+    filter: brightness(.94)
+  }
+}
+
+[data-slot="button"][data-type="standard"]:not(:disabled):not([aria-disabled="true"]):active {
+  filter: brightness(.86);
+  translate: 0 2px
+}
+
+[data-slot="button"][data-type="standard"]:disabled,
+[data-slot="button"][data-type="standard"][aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: .5
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot="button"][data-type="standard"] {
+    transition: none
+  }
+
+  [data-slot="button"][data-type="standard"]:not(:disabled):not([aria-disabled="true"]):active {
+    translate: none
+  }
+}
