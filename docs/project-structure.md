@@ -9,6 +9,7 @@
 - frontend/src/features：业务模块，按实际功能逐步实现。
 - frontend/src/lib/api：前端 HTTP 边界。
 - backend/app/api：HTTP 路由与响应。
+- backend/app/auth：Better Auth 配置、微信资料映射与会话策略。
 - backend/app/service：业务编排。
 - backend/app/repository：数据库访问。
 - backend/app/contracts：接口结构与校验。
