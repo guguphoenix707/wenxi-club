@@ -40,7 +40,8 @@
 }
 
 .app-sidebar-footer .note {
-  margin-top: 0
+  margin-top: 0;
+  font-size: 13px
 }
 
 [data-slot="sidebar-menu"] {

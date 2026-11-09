@@ -33,7 +33,7 @@ export function ButtonDisplay() {
 
   return <div className={styles.showcase}>
     <header>
-      <p className="eyebrow">COMPONENTS / BUTTON</p>
+      <p className={styles.eyebrow}>COMPONENTS / BUTTON</p>
       <h1>按钮展示</h1>
       <p className={styles.intro}>复用项目公共 Button 和产品主题。所有操作仅用于展示，不修改业务数据。</p>
     </header>
