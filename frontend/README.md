@@ -17,8 +17,8 @@ React 19 + TypeScript + Vite + React Router SPA。`src/main.tsx` 是浏览器入
 | `/review` | `review.tsx` |
 | `/import` | `import.tsx` |
 | `/stats` | `stats.tsx` |
-| `/login` | `login.tsx`（独立于应用壳，微信扫码登录） |
-| `/test-style` | `test-style/index.tsx`（公共按钮的变体、状态、尺寸与图标展示） |
+| `/login` | `login.tsx`（独立于应用壳，邮箱登录/注册；配置了微信凭据时才展示扫码） |
+| `/test-style` | `test-style/index.tsx`（公共按钮与输入框展示） |
 | 其他路径 | `not-found.tsx` |
 
 页面通过 React.lazy 按需加载；共享布局提供导航、加载状态和滚动恢复，React Router 提供错误边界。

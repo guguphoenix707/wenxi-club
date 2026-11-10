@@ -1,0 +1,71 @@
+[data-slot="field"][data-type="standard"] {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  text-align: left;
+}
+
+[data-slot="field"][data-type="standard"] > label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+[data-slot="field-control"][data-type="standard"] {
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+  width: 100%;
+  align-items: stretch;
+}
+
+[data-slot="field-input"] {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 0;
+}
+
+[data-slot="field"][data-type="standard"] [data-slot="input"] {
+  height: 48px;
+  min-width: 0;
+  width: 100%;
+  padding: 0 14px;
+  border: var(--outline-width) solid var(--outline);
+  border-radius: var(--radius-control);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 14px;
+  box-shadow: none;
+}
+
+[data-slot="field"][data-type="standard"] [data-slot="input"]:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--focus) 40%, transparent);
+  outline-offset: 3px;
+  border-color: var(--outline-strong);
+}
+
+[data-slot="field"][data-type="standard"] [data-slot="input"][aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+[data-slot="field-control"][data-type="standard"] > [data-slot="button"] {
+  flex-shrink: 0;
+  align-self: stretch;
+  min-width: 7.5rem;
+  min-height: 48px;
+}
+
+[data-slot="field-hint"][data-type="standard"],
+[data-slot="field-error"][data-type="standard"] {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+[data-slot="field-hint"][data-type="standard"] {
+  color: var(--text-muted);
+}
+
+[data-slot="field-error"][data-type="standard"] {
+  color: var(--danger);
+}
