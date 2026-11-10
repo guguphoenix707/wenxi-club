@@ -1,4 +1,4 @@
-# 面试温习社 · 生产工程
+# 温习社 · 生产工程
 
 参考原型 `/Users/xin/Documents/wenxi-house` 初始化的独立生产工程骨架，使用 React / TypeScript + Node.js；npm workspaces 统一依赖。
 

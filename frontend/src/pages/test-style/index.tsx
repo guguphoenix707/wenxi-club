@@ -28,7 +28,7 @@ export default function TestStyle() {
 
   return (
     <div id={active.id} className={styles.gallery}>
-      <title>{`${active.label} · 组件展示 · 面试温习社`}</title>
+      <title>{`${active.label} · 组件展示 · 温习社`}</title>
       <meta name="robots" content="noindex, nofollow" />
       <nav className={styles.nav} aria-label="组件示例">
         <ul className={styles.list}>

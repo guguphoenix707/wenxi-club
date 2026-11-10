@@ -8,10 +8,10 @@ export default function Dashboard() {
       <header>
         <p className={styles.eyebrow}>每天一点，温故知新</p>
         <h1>今日总览</h1>
-        <p>从整理一道面试题开始，把模糊变熟悉。</p>
+        <p>从整理一道题开始，把模糊变熟悉。</p>
       </header>
       <section className={styles.panel}>
-        <h2>欢迎来到面试温习社</h2>
+        <h2>欢迎来到温习社</h2>
         <p>生产代码骨架已初始化。题库、温习计划与学习统计将在接入真实账户和数据库后呈现。</p>
         <Button render={<Link to="/questions/new">前往添加题目</Link>} />
       </section>
