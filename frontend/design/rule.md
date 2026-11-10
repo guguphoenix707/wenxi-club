@@ -5,6 +5,8 @@
 - 路由映射集中在 src/router，可按业务增加子路由，页面放在 src/pages
 - CSS 全局文件维护设计变量与基础样式；组件局部样式优先 CSS Modules。沿用现有视觉，不引入默认组件库主题。
 - 不修改 `components/ui` 源文件，避免和 shadcn 上游难以区分。改默认样式：新增 CSS 再引入，或在 `components/common/` 包装 `components/ui/`。页面引用 `common`，不直接改 `ui`。`styles/shadcn.css` 只做 token 映射。
+- `components/common` 的类名以品牌前缀 `bread-` 开头，原则上不靠 shadcn 的 `data-slot` 写样式。根类是 `bread-` 加组件名，如 `.bread-button`、`.bread-input`；零件接在后面，如 `.bread-input-label`。
+- 外部 `className` 只拼接，不在 JS 里按变体拼类名：`className={classes('bread-button', className)}`。变体和尺寸放在 `data-variant`、`data-size`，样式写成 `.bread-button[data-variant="default"]`。
 - 有明确业务收益时推荐引入三方包
 - 异步界面明确处理加载、失败、空态；支持键盘操作、可访问标签和响应式布局。
 - 不在浏览器调用需要私密密钥的模型 API；接口返回值在边界验证，不默默修正后端业务数据。
