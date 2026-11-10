@@ -1,4 +1,4 @@
-[data-slot="form"][data-type="standard"] {
+.bread-form {
   display: grid;
   gap: 10px;
   margin-top: 28px;
@@ -6,7 +6,7 @@
   text-align: left;
 }
 
-[data-slot="form-error"][data-type="standard"] {
+.bread-form-error {
   margin: 4px 0 0;
   color: var(--danger);
   font-size: 12px;

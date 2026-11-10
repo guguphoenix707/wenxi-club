@@ -36,32 +36,33 @@ export function AppSidebar() {
   }, [location.pathname, setOpenMobile]);
 
   return (
-    <Sidebar className="app-sidebar" collapsible="icon">
-      <SidebarHeader className="app-sidebar-header">
-        <Link to="/" className="brand">
+    <Sidebar className={open ? 'bread-sidebar' : 'bread-sidebar bread-sidebar-collapsed'} collapsible="icon">
+      <SidebarHeader className="bread-sidebar-header">
+        <Link to="/" className="bread-brand">
           温习社
           <small>把模糊变熟悉</small>
         </Link>
         <SidebarTrigger
-          className="desktop-sidebar-toggle"
+          className="bread-sidebar-toggle"
           aria-label={open ? '收起侧边栏' : '展开侧边栏'}
           aria-expanded={open}
           title={open ? '收起侧边栏' : '展开侧边栏'}
         />
-        <button type="button" className="sidebar-close" onClick={() => setOpenMobile(false)} aria-label="关闭导航菜单">
+        <button type="button" className="bread-sidebar-close" onClick={() => setOpenMobile(false)} aria-label="关闭导航菜单">
           ×
         </button>
       </SidebarHeader>
-      <SidebarContent className="app-sidebar-content">
-        <SidebarGroup className="app-sidebar-group">
+      <SidebarContent className="bread-sidebar-content">
+        <SidebarGroup className="bread-sidebar-group">
           <SidebarGroupContent>
             <nav aria-label="主导航">
-              <SidebarMenu>
+              <SidebarMenu className="bread-sidebar-menu">
                 {navigationItems.map(item => {
                   const active = Boolean(matchPath({ path: item.to, end: true }, location.pathname));
                   return (
-                    <SidebarMenuItem key={item.to}>
+                    <SidebarMenuItem className="bread-sidebar-menu-item" key={item.to}>
                       <SidebarMenuButton
+                        className={active ? 'bread-sidebar-item bread-sidebar-item-active' : 'bread-sidebar-item'}
                         render={<NavLink to={item.to} end>{item.label}</NavLink>}
                         isActive={active}
                       />
@@ -73,9 +74,9 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="app-sidebar-footer">
+      <SidebarFooter className="bread-sidebar-footer">
         {/*FIXME*/}
-        <p className="note">待定</p>
+        <p className="bread-sidebar-note">待定</p>
       </SidebarFooter>
     </Sidebar>
   );
@@ -86,14 +87,14 @@ export function MobileHeader() {
   const { openMobile } = useSidebar();
 
   return (
-    <header className="mobile-header">
+    <header className="bread-mobile-header">
       <SidebarTrigger
-        className="mobile-menu-button"
+        className="bread-mobile-menu"
         aria-label={openMobile ? '收起侧边栏' : '展开侧边栏'}
         aria-expanded={openMobile}
         title={openMobile ? '收起侧边栏' : '展开侧边栏'}
       />
-      <div className="mobile-header-title">
+      <div className="bread-mobile-title">
         <strong>温习社</strong>
         <small>{currentNavLabel(pathname)}</small>
       </div>

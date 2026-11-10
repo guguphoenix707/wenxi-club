@@ -9,6 +9,10 @@ type InputProps = ComponentProps<typeof UiInput> & {
   suffix?: ReactNode;
 };
 
+function classes(...names: Array<string | undefined>) {
+  return names.filter(Boolean).join(' ');
+}
+
 export function Input({
   label,
   error,
@@ -25,22 +29,22 @@ export function Input({
   const describedBy = [hintId, errorId].filter(Boolean).join(' ') || undefined;
 
   return (
-    <div data-slot="field" data-type="standard">
-      <label htmlFor={inputId}>{label}</label>
-      <div data-slot="field-control" data-type="standard">
-        <div data-slot="field-input">
+    <div className="bread-input">
+      <label className="bread-input-label" htmlFor={inputId}>{label}</label>
+      <div className="bread-input-control">
+        <div className="bread-input-field">
           <UiInput
             {...props}
             id={inputId}
-            className={className}
+            className={classes('bread-input-native', className)}
             aria-invalid={error ? true : undefined}
             aria-describedby={describedBy}
           />
         </div>
         {suffix}
       </div>
-      {hint ? <p id={hintId} data-slot="field-hint" data-type="standard">{hint}</p> : null}
-      {error ? <p id={errorId} data-slot="field-error" data-type="standard" role="alert">{error}</p> : null}
+      {hint ? <p id={hintId} className="bread-input-hint">{hint}</p> : null}
+      {error ? <p id={errorId} className="bread-input-error" role="alert">{error}</p> : null}
     </div>
   );
 }

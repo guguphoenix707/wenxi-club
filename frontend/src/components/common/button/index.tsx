@@ -2,21 +2,28 @@ import type { ComponentProps } from 'react';
 import { Button as UiButton } from '@/components/ui/button';
 import './button.css';
 
-type UiButtonProps = ComponentProps<typeof UiButton>;
+type UiButtonProps = Omit<ComponentProps<typeof UiButton>, 'className'> & {
+  className?: string;
+};
+
+function classes(...names: Array<string | undefined>) {
+  return names.filter(Boolean).join(' ');
+}
 
 export function Button({
   variant = 'default',
   size = 'default',
+  className,
   ...props
 }: UiButtonProps) {
   return (
     <UiButton
+      {...props}
       variant={variant}
       size={size}
-      {...props}
-      data-type="standard"
       data-variant={variant}
       data-size={size}
+      className={classes('bread-button', className)}
     />
   );
 }

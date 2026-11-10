@@ -9,12 +9,12 @@ import '@/components/common/shell/shell.css';
 export function AppShell() {
   return (
     <TooltipProvider>
-      <SidebarProvider className="shell">
-        <a className="skip-link" href="#main">跳到内容</a>
+      <SidebarProvider className="bread-shell">
+        <a className="bread-skip-link" href="#main">跳到内容</a>
         <AppSidebar />
-        <SidebarInset id="main">
+        <SidebarInset id="main" className="bread-main">
           <MobileHeader />
-          <div className="page">
+          <div className="bread-page">
             <Suspense fallback={<Loading />}><Outlet /></Suspense>
           </div>
         </SidebarInset>

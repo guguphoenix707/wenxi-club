@@ -1,17 +1,17 @@
-[data-slot="field"][data-type="standard"] {
+.bread-input {
   display: grid;
   gap: 8px;
   min-width: 0;
   text-align: left;
 }
 
-[data-slot="field"][data-type="standard"] > label {
+.bread-input-label {
   font-size: 13px;
   font-weight: 700;
   color: var(--ink);
 }
 
-[data-slot="field-control"][data-type="standard"] {
+.bread-input-control {
   display: flex;
   gap: 10px;
   min-width: 0;
@@ -19,13 +19,13 @@
   align-items: stretch;
 }
 
-[data-slot="field-input"] {
+.bread-input-field {
   flex: 1 1 auto;
   min-width: 0;
   width: 0;
 }
 
-[data-slot="field"][data-type="standard"] [data-slot="input"] {
+.bread-input-native {
   height: 48px;
   min-width: 0;
   width: 100%;
@@ -38,34 +38,34 @@
   box-shadow: none;
 }
 
-[data-slot="field"][data-type="standard"] [data-slot="input"]:focus-visible {
+.bread-input-native:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--focus) 40%, transparent);
   outline-offset: 3px;
   border-color: var(--outline-strong);
 }
 
-[data-slot="field"][data-type="standard"] [data-slot="input"][aria-invalid="true"] {
+.bread-input-native[aria-invalid="true"] {
   border-color: var(--danger);
 }
 
-[data-slot="field-control"][data-type="standard"] > [data-slot="button"] {
+.bread-input-control > .bread-button {
   flex-shrink: 0;
   align-self: stretch;
   min-width: 7.5rem;
   min-height: 48px;
 }
 
-[data-slot="field-hint"][data-type="standard"],
-[data-slot="field-error"][data-type="standard"] {
+.bread-input-hint,
+.bread-input-error {
   margin: 0;
   font-size: 12px;
   line-height: 1.6;
 }
 
-[data-slot="field-hint"][data-type="standard"] {
+.bread-input-hint {
   color: var(--text-muted);
 }
 
-[data-slot="field-error"][data-type="standard"] {
+.bread-input-error {
   color: var(--danger);
 }

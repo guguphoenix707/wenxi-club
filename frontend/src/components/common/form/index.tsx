@@ -12,19 +12,23 @@ export function readFormString(form: FormData, name: string) {
   return typeof value === 'string' ? value : '';
 }
 
+function classes(...names: Array<string | undefined>) {
+  return names.filter(Boolean).join(' ');
+}
+
 export function Form({
   busy = false,
   error,
   actions,
   children,
   onSubmit,
+  className,
   ...props
 }: FormProps) {
   return (
     <form
       {...props}
-      data-slot="form"
-      data-type="standard"
+      className={classes('bread-form', className)}
       aria-busy={busy || undefined}
       onSubmit={(event) => {
         if (busy) {
@@ -35,7 +39,7 @@ export function Form({
       }}
     >
       {children}
-      {error ? <p data-slot="form-error" data-type="standard" role="alert">{error}</p> : null}
+      {error ? <p className="bread-form-error" role="alert">{error}</p> : null}
       {actions}
     </form>
   );
