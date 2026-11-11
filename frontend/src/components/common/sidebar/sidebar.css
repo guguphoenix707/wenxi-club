@@ -13,7 +13,7 @@
   padding: 34px 22px 14px
 }
 
-.bread-sidebar-header .bread-brand {
+.bread-sidebar-header .bread-sidebar-brand {
   width: 100%;
   padding: 0 9px 16px
 }
@@ -67,7 +67,7 @@
   box-shadow: 0 4px 0 #d88a38
 }
 
-.bread-brand {
+.bread-sidebar-brand {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -79,7 +79,7 @@
   text-align: left
 }
 
-.bread-brand small {
+.bread-sidebar-brand small {
   display: block;
   margin-top: 3px;
   color: #8f8b7e;
@@ -101,7 +101,7 @@
     padding: 28px 14px 24px
   }
 
-  .bread-sidebar-header .bread-brand {
+  .bread-sidebar-header .bread-sidebar-brand {
     flex: 1;
     min-width: 0;
     padding: 0;
@@ -130,7 +130,7 @@
     padding: 28px 0 24px
   }
 
-  .bread-sidebar-collapsed .bread-brand,
+  .bread-sidebar-collapsed .bread-sidebar-brand,
   .bread-sidebar-collapsed .bread-sidebar-content,
   .bread-sidebar-collapsed .bread-sidebar-footer {
     display: none
@@ -203,7 +203,7 @@
     padding: max(24px, env(safe-area-inset-top)) 18px 12px
   }
 
-  .bread-sidebar-header .bread-brand {
+  .bread-sidebar-header .bread-sidebar-brand {
     padding-right: 42px
   }
 

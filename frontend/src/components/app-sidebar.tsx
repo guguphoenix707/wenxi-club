@@ -38,7 +38,7 @@ export function AppSidebar() {
   return (
     <Sidebar className={open ? 'bread-sidebar' : 'bread-sidebar bread-sidebar-collapsed'} collapsible="icon">
       <SidebarHeader className="bread-sidebar-header">
-        <Link to="/" className="bread-brand">
+        <Link to="/" className="bread-sidebar-brand">
           温习社
           <small>把模糊变熟悉</small>
         </Link>
