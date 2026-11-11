@@ -1,0 +1,16 @@
+.bread-brand {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  color: var(--ink);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.bread-brand > span {
+  background: var(--coral);
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  padding: 7px 12px;
+  box-shadow: var(--shadow-offset);
+}
