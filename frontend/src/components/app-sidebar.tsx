@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { Link, NavLink, matchPath, useLocation } from 'react-router';
+import { NavLink, matchPath, useLocation } from 'react-router';
+import { Brand } from '@/components/common/brand';
 import {
   Sidebar,
   SidebarContent,
@@ -38,10 +39,7 @@ export function AppSidebar() {
   return (
     <Sidebar className={open ? 'bread-sidebar' : 'bread-sidebar bread-sidebar-collapsed'} collapsible="icon">
       <SidebarHeader className="bread-sidebar-header">
-        <Link to="/" className="bread-sidebar-brand">
-          温习社
-          <small>把模糊变熟悉</small>
-        </Link>
+        <Brand to="/" size="sm" className="bread-sidebar-brand" subtitle="把模糊变熟悉" />
         <SidebarTrigger
           className="bread-sidebar-toggle"
           aria-label={open ? '收起侧边栏' : '展开侧边栏'}
@@ -94,10 +92,7 @@ export function MobileHeader() {
         aria-expanded={openMobile}
         title={openMobile ? '收起侧边栏' : '展开侧边栏'}
       />
-      <div className="bread-mobile-title">
-        <strong>温习社</strong>
-        <small>{currentNavLabel(pathname)}</small>
-      </div>
+      <Brand to="/" size="sm" className="bread-mobile-title" subtitle={currentNavLabel(pathname)} />
     </header>
   );
 }

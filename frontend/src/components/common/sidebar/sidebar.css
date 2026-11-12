@@ -69,8 +69,8 @@
 
 .bread-sidebar-brand {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  flex-direction: row;
+  align-items: center;
   border: 0;
   background: transparent;
   color: inherit;
@@ -177,16 +177,15 @@
   .bread-mobile-title {
     display: flex;
     min-width: 0;
-    flex-direction: column;
-    justify-content: center
+    align-items: center
   }
 
-  .bread-mobile-title strong,
+  .bread-mobile-title .bread-brand-text > span,
   .bread-mobile-title small {
     display: block
   }
 
-  .bread-mobile-title strong {
+  .bread-mobile-title .bread-brand-text > span {
     overflow: hidden;
     font-size: 14px;
     text-overflow: ellipsis;
