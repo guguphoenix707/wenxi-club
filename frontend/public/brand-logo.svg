@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 128 128" shape-rendering="crispEdges" role="img" aria-labelledby="title desc">
+  <title id="title">温习社 · 记忆面包</title>
+  <desc id="desc">向右倾斜十二度的暖金色像素吐司，带深棕色厚边与虚构的记忆符号，透明背景品牌图标。</desc>
+  <defs>
+    <path id="toast" d="M32 12H80V16H92V24H100V40H96V48H92V100H88V108H80V112H32V108H24V100H20V48H16V40H12V24H20V16H32Z"/>
+    <path id="a" d="M0 0H9V3H6V6H3V9H0V6H3V3H0Z"/>
+    <path id="b" d="M0 0H3V3H6V0H9V3H6V6H9V9H6V6H3V9H0V6H3V3H0Z"/>
+    <path id="c" d="M0 0H9V3H3V6H9V12H0V9H6V8H0Z"/>
+    <path id="d" d="M3 0H6V3H9V6H6V9H3V6H0V3H3Z"/>
+  </defs>
+  <g transform="translate(64 64) rotate(12) scale(.9) translate(-60 -66)" shape-rendering="geometricPrecision">
+  <use href="#toast" x="8" y="8" fill="#51352f"/>
+  <path fill="#905039" d="M96 32H104V48H100V56H96V108H92V116H84V120H36V116H84V108H88V100H92V48H96Z"/>
+  <path fill="#b76d40" d="M100 32H104V44H100V52H96V100H92V108H88V112H84V108H88V100H92V48H96V40H100Z"/>
+  <use href="#toast" fill="#51352f"/>
+  <path fill="#cd8848" d="M32 16H80V20H92V28H96V40H92V48H88V100H84V104H80V108H32V104H28V100H24V48H20V40H16V28H24V20H32Z"/>
+  <path fill="#eaaa59" d="M32 16H80V20H88V24H92V28H96V36H88V32H80V28H32V32H24V40H20V36H16V28H24V20H32Z"/>
+  <path fill="#ffe2a0" d="M32 20H76V24H32V28H24V32H20V28H24V24H32Z"/>
+  <path fill="#f6d18a" d="M36 28H76V32H84V36H88V40H84V48H80V96H76V100H36V96H32V48H28V40H24V36H28V32H36Z"/>
+  <path fill="#ffe5ad" d="M36 28H76V32H80V36H36V40H32V48H28V40H24V36H28V32H36Z"/>
+  <path fill="#e7b773" d="M80 48H84V92H80V100H76V104H36V100H32V96H28V52H32V96H36V100H76V96H80Z"/>
+  <path fill="#efc17c" d="M38 37H42V41H38ZM72 37H76V41H72ZM35 64H38V67H35ZM75 73H78V76H75ZM45 94H49V97H45Z"/>
+  <g fill="#93603f">
+    <use href="#a" x="36" y="45"/>
+    <use href="#d" x="52" y="43"/>
+    <use href="#c" x="67" y="44"/>
+    <path fill-rule="evenodd" d="M37 60H50V75H37ZM40 63V72H47V63ZM62 60H75V75H62ZM65 63V72H72V63Z"/>
+    <path d="M42 65H45V69H42ZM53 64H59V67H53ZM53 70H59V73H53ZM67 66H70V69H67Z"/>
+    <use href="#b" x="37" y="81"/>
+    <use href="#a" x="53" y="83"/>
+    <use href="#d" x="68" y="81"/>
+  </g>
+  <path fill="#f4c77b" d="M24 48H28V56H24ZM24 72H28V84H24ZM32 102H40V105H32ZM83 30H87V34H83Z"/>
+  </g>
+</svg>
