@@ -1,5 +1,5 @@
 import { toLower, trim } from 'lodash-es';
-import type { FormEvent } from 'react';
+import type { SubmitEvent } from 'react';
 import { Button } from '@/components/common/button';
 import { Form, readFormString } from '@/components/common/form';
 import { Input } from '@/components/common/input';
@@ -13,7 +13,7 @@ type EmailLoginFormProps = {
 };
 
 export function EmailLoginForm({ busy = false, error, onSubmit }: EmailLoginFormProps) {
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (busy) return;
     const data = new FormData(event.currentTarget);
