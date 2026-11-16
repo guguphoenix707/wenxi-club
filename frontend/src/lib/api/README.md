@@ -1,3 +1,3 @@
 # 目录职责
 
-浏览器通过同源 /api 访问后端。登录使用 `better-auth/client` 与原生 fetch 请求 `/api/auth`。接入具体业务接口时增加响应校验、超时与错误处理。
+浏览器通过同源 `/api` 访问后端。`client.ts` 的 `requestJson` 是唯一的响应处理入口：成功返回要消费的数据，失败返回 `{ code, message }`。`message` 直接展示。响应无法识别、超时或网络失败时才抛出。登录接口放在 `auth.ts`，不再按错误码翻译文案。

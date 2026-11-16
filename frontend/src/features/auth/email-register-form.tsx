@@ -9,7 +9,7 @@ import styles from './email-auth.module.css';
 type EmailRegisterFormProps = {
   busy?: boolean;
   error?: string;
-  onSendCode: (email: string) => void | Promise<void>;
+  onSendCode: (email: string) => boolean | Promise<boolean>;
   onSubmit: (values: { email: string; otp: string; password: string }) => void | Promise<void>;
 };
 
@@ -35,16 +35,14 @@ export function EmailRegisterForm({
 
   const handleSendCode = async (event: MouseEvent<HTMLButtonElement>) => {
     const form = event.currentTarget.form;
-    //FIXME 兼容性，namedItem reportValidity等等
     const emailInput = form?.elements.namedItem('email');
     if (!(emailInput instanceof HTMLInputElement) || !emailInput.reportValidity()) return;
     setSending(true);
     try {
-      await onSendCode(toLower(trim(emailInput.value)));
+      const sent = await onSendCode(toLower(trim(emailInput.value)));
+      if (!sent) return;
       setHasChallenge(true);
       setResendAt(Date.now() + 60_000);
-    } catch {
-      /* FIXME 登录页会写入错误文案 */
     } finally {
       setSending(false);
     }

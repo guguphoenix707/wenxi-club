@@ -5,7 +5,6 @@ import {Button} from '@/components/common/button';
 import {EmailLoginForm} from '@/features/auth/email-login-form';
 import {EmailRegisterForm} from '@/features/auth/email-register-form';
 import {
-  AuthNotConfiguredError,
   getBrowserSession,
   getLoginMethods,
   registerWithEmail,
@@ -49,27 +48,27 @@ export default function LoginPage() {
       try {
         const methods = await getLoginMethods();
         if (cancelled) return;
-        let session: Awaited<ReturnType<typeof getBrowserSession>> = null;
-        try {
-          session = await getBrowserSession();
-        } catch (error) {
-          if (error instanceof AuthNotConfiguredError) throw error;
+        if (!methods.ok) {
+          setScreen('unconfigured');
+          setMessage(methods.error.message);
+          return;
         }
+        const session = await getBrowserSession();
         if (cancelled) return;
-        if (session?.user) {
+        if (!session.ok) {
+          setScreen('unconfigured');
+          setMessage(session.error.message);
+          return;
+        }
+        if (session.data?.user) {
           setScreen('entering');
           await navigate('/', {replace: true});
           return;
         }
-        setWechatEnabled(methods.wechat);
+        setWechatEnabled(methods.data.wechat);
         setScreen('form');
       } catch (error) {
         if (cancelled) return;
-        if (error instanceof AuthNotConfiguredError) {
-          setScreen('unconfigured');
-          setMessage(error.message);
-          return;
-        }
         setScreen('unconfigured');
         setMessage(error instanceof Error ? error.message : '登录服务暂时不可用');
       }
@@ -89,8 +88,12 @@ export default function LoginPage() {
       setAuthorization(null);
       setWechatError('');
       try {
-        const url = await startWeChatSignIn();
-        const nextAuthorization = parseWeChatAuthorizationUrl(url);
+        const result = await startWeChatSignIn();
+        if (!result.ok) {
+          if (!cancelled) setWechatError(result.error.message);
+          return;
+        }
+        const nextAuthorization = parseWeChatAuthorizationUrl(result.data);
         if (cancelled) return;
         setAuthorization(nextAuthorization);
       } catch (error) {
@@ -130,7 +133,11 @@ export default function LoginPage() {
     setBusy(true);
     setMessage('');
     try {
-      await signInWithEmail(values);
+      const result = await signInWithEmail(values);
+      if (!result.ok) {
+        setMessage(result.error.message);
+        return;
+      }
       await enterAfterAuth();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '登录失败，请稍后重试');
@@ -143,7 +150,11 @@ export default function LoginPage() {
     setBusy(true);
     setMessage('');
     try {
-      await registerWithEmail(values);
+      const result = await registerWithEmail(values);
+      if (!result.ok) {
+        setMessage(result.error.message);
+        return;
+      }
       await enterAfterAuth();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '注册失败，请稍后重试');
@@ -155,10 +166,15 @@ export default function LoginPage() {
   async function handleSendCode(email: string) {
     setMessage('');
     try {
-      await sendEmailOtp(email);
+      const result = await sendEmailOtp(email);
+      if (!result.ok) {
+        setMessage(result.error.message);
+        return false;
+      }
+      return true;
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '验证码发送失败，请稍后重试');
-      throw error;
+      return false;
     }
   }
 

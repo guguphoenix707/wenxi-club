@@ -1,13 +1,13 @@
 # HTTP 契约
 
-通用约定：未知路径返回 404。由 HTTP 状态表达的错误格式为 `{"error":{"code":"...","message":"..."}}`。同一次请求的标识只放在响应头 `X-Request-Id`，不写入 JSON。由本服务直接返回的 JSON 响应包含 `X-Request-Id` 和 `Cache-Control: no-store`。`/api/health` 与 Better Auth 处理的 `/api/auth/*` 成功响应不使用下面的业务 JSON。`/api/auth/*` 成功响应遵循该库的 cookie、重定向和 JSON 形状。
+通用约定：未知路径返回 404。由 HTTP 状态表达的错误格式为 `{"error":{"code":"...","message":"..."}}`。`message` 是给调用方直接展示的文案，由服务端按 `code` 维护；客户端不按 `code` 再翻译一遍。同一次请求的标识只放在响应头 `X-Request-Id`，不写入 JSON。由本服务直接返回的 JSON 响应包含 `X-Request-Id` 和 `Cache-Control: no-store`。`/api/health` 与 Better Auth 处理的 `/api/auth/*` 成功响应不使用下面的业务 JSON。`/api/auth/*` 成功响应遵循该库的 cookie、重定向和 JSON 形状。`/api/auth/*` 的失败响应在离开本服务前改成上面的错误格式，并把库自带的英文说明换成产品文案。
 
 ## 业务 JSON
 
 题目 CRUD、复习评分与调度、导入、统计、AI 尚未实现。这些接口在 HTTP 200 时返回数字 `code`、业务数据 `data`，以及 `err`。`err.msg` 是字符串。`err.stack` 的类型尚未规定。
 
 - 0：成功
-- 10000：正常业务校验失败
+- 10000：正常业务校验失败。`err.msg` 是展示文案，客户端不按数字 `code` 另备文案表。
 - 40000–49999：登录鉴权。40001 表示 token 失效；40100 表示暂未开通或暂无权限
 - 50000–59999：服务端错误
   - 500100：AI 额度不够
