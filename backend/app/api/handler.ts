@@ -5,8 +5,14 @@ import { hasWeChatAuth, readAuthConfig } from '../config.ts';
 import { installErrorBodyRewrite } from './error-response.ts';
 import { errorEnvelope, successEnvelope } from './error-messages.ts';
 
-export const handler: RequestListener = (req, res) => {
-  const requestId = randomUUID();
+function sendJson(
+  res: ServerResponse,
+  status: number,
+  body: unknown,
+  requestId: string,
+  extra?: Record<string, string>,
+) {
+  res.statusCode = status;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -75,3 +81,9 @@ export function createHandler(env: NodeJS.ProcessEnv = process.env) {
     }
     sendJson(res, 404, errorEnvelope('NOT_FOUND'), requestId);
   };
+
+  return {
+    handler,
+    close: () => authRuntime?.close() ?? Promise.resolve(),
+  };
+}

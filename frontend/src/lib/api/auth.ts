@@ -1,3 +1,4 @@
+import { FALLBACK_MESSAGE } from '@/constants/error-messages';
 import { ApiError, requestJson } from './client';
 
 export type LoginMethods = {
@@ -31,13 +32,13 @@ function requestAuth(input: RequestInfo | URL, init?: RequestInit) {
 
 export async function getBrowserSession(): Promise<BrowserSession> {
   const data = await requestAuth('/api/auth/get-session');
-  if (!isBrowserSession(data)) throw new ApiError('服务响应无法识别');
+  if (!isBrowserSession(data)) throw new ApiError(FALLBACK_MESSAGE);
   return data;
 }
 
 export async function getLoginMethods(): Promise<LoginMethods> {
   const data = await requestAuth('/api/auth/login-methods');
-  if (!isLoginMethods(data)) throw new ApiError('服务响应无法识别');
+  if (!isLoginMethods(data)) throw new ApiError(FALLBACK_MESSAGE);
   return data;
 }
 
@@ -77,6 +78,6 @@ export async function startWeChatSignIn() {
     }),
   });
   const url = authorizationUrl(data);
-  if (!url) throw new ApiError('服务响应无法识别');
+  if (!url) throw new ApiError(FALLBACK_MESSAGE);
   return url;
 }

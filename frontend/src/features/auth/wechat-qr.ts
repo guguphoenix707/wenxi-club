@@ -1,3 +1,11 @@
+import {
+  LOGIN_CONTAINER_MISSING_MESSAGE,
+  WECHAT_AUTH_PARAMS_INCOMPLETE_MESSAGE,
+  WECHAT_AUTH_URL_INVALID_MESSAGE,
+  WECHAT_SCRIPT_FAILED_MESSAGE,
+  WECHAT_SCRIPT_UNAVAILABLE_MESSAGE,
+} from '@/constants/error-messages';
+
 const SCRIPT_SRC = 'https://res.wx.qq.com/connect/zh_CN/htmledition/js/wxLogin.js';
 
 type WxLoginCtor = new (options: {
@@ -26,13 +34,13 @@ export type WeChatAuthorization = {
 export function parseWeChatAuthorizationUrl(urlString: string): WeChatAuthorization {
   const url = new URL(urlString);
   if (url.hostname !== 'open.weixin.qq.com' || !url.pathname.endsWith('/connect/qrconnect')) {
-    throw new Error('授权地址无效');
+    throw new Error(WECHAT_AUTH_URL_INVALID_MESSAGE);
   }
   const appid = url.searchParams.get('appid');
   const redirectUri = url.searchParams.get('redirect_uri');
   const state = url.searchParams.get('state');
   const scope = url.searchParams.get('scope') || 'snsapi_login';
-  if (!appid || !redirectUri || !state) throw new Error('授权参数不完整');
+  if (!appid || !redirectUri || !state) throw new Error(WECHAT_AUTH_PARAMS_INCOMPLETE_MESSAGE);
   return { appid, redirectUri, state, scope };
 }
 
@@ -42,7 +50,7 @@ export function loadWxLogin() {
   if (existing) {
     return new Promise<void>((resolve, reject) => {
       existing.addEventListener('load', () => resolve(), { once: true });
-      existing.addEventListener('error', () => reject(new Error('微信登录脚本加载失败')), { once: true });
+      existing.addEventListener('error', () => reject(new Error(WECHAT_SCRIPT_FAILED_MESSAGE)), { once: true });
     });
   }
   return new Promise<void>((resolve, reject) => {
@@ -50,16 +58,16 @@ export function loadWxLogin() {
     script.src = SCRIPT_SRC;
     script.async = true;
     script.onload = () => resolve();
-    script.onerror = () => reject(new Error('微信登录脚本加载失败'));
+    script.onerror = () => reject(new Error(WECHAT_SCRIPT_FAILED_MESSAGE));
     document.head.appendChild(script);
   });
 }
 
 export function mountWxLogin(containerId: string, authorization: WeChatAuthorization) {
   const WxLogin = window.WxLogin;
-  if (!WxLogin) throw new Error('微信登录脚本不可用');
+  if (!WxLogin) throw new Error(WECHAT_SCRIPT_UNAVAILABLE_MESSAGE);
   const container = document.getElementById(containerId);
-  if (!container) throw new Error('登录容器不存在');
+  if (!container) throw new Error(LOGIN_CONTAINER_MISSING_MESSAGE);
   container.replaceChildren();
   new WxLogin({
     self_redirect: false,

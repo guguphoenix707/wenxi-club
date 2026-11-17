@@ -1,5 +1,14 @@
 import {useEffect, useId, useState} from 'react';
 import {useNavigate, useSearchParams} from 'react-router';
+import {
+  LOGIN_FAILED_MESSAGE,
+  LOGIN_UNAVAILABLE_MESSAGE,
+  OTP_SEND_FAILED_MESSAGE,
+  REGISTER_FAILED_MESSAGE,
+  WECHAT_INCOMPLETE_MESSAGE,
+  WECHAT_QR_FAILED_MESSAGE,
+  WECHAT_SCRIPT_FAILED_MESSAGE,
+} from '@/constants/error-messages';
 import {Brand} from '@/components/common/brand';
 import {Button} from '@/components/common/button';
 import {EmailLoginForm} from '@/features/auth/email-login-form';
@@ -33,7 +42,7 @@ export default function LoginPage() {
   const [emailMode, setEmailMode] = useState<EmailMode>('login');
   const [wechatEnabled, setWechatEnabled] = useState(false);
   const [message, setMessage] = useState(
-    searchParams.get('error') ? '登录未完成，请重新扫码' : '',
+    searchParams.get('error') ? WECHAT_INCOMPLETE_MESSAGE : '',
   );
   const [busy, setBusy] = useState(false);
   const [authorization, setAuthorization] = useState<WeChatAuthorization | null>(null);
@@ -60,7 +69,7 @@ export default function LoginPage() {
       } catch (error) {
         if (cancelled) return;
         setScreen('unconfigured');
-        setMessage(error instanceof Error ? error.message : '登录服务暂时不可用');
+        setMessage(error instanceof Error ? error.message : LOGIN_UNAVAILABLE_MESSAGE);
       }
     }
 
@@ -84,7 +93,7 @@ export default function LoginPage() {
         setAuthorization(nextAuthorization);
       } catch (error) {
         if (cancelled) return;
-        setWechatError(error instanceof Error ? error.message : '登录二维码加载失败');
+        setWechatError(error instanceof Error ? error.message : WECHAT_QR_FAILED_MESSAGE);
       }
     }
 
@@ -103,7 +112,7 @@ export default function LoginPage() {
       })
       .catch((error: unknown) => {
         if (cancelled) return;
-        setWechatError(error instanceof Error ? error.message : '微信登录脚本加载失败');
+        setWechatError(error instanceof Error ? error.message : WECHAT_SCRIPT_FAILED_MESSAGE);
       });
     return () => {
       cancelled = true;
@@ -122,7 +131,7 @@ export default function LoginPage() {
       await signInWithEmail(values);
       await enterAfterAuth();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : '登录失败，请稍后重试');
+      setMessage(error instanceof Error ? error.message : LOGIN_FAILED_MESSAGE);
     } finally {
       setBusy(false);
     }
@@ -135,7 +144,7 @@ export default function LoginPage() {
       await registerWithEmail(values);
       await enterAfterAuth();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : '注册失败，请稍后重试');
+      setMessage(error instanceof Error ? error.message : REGISTER_FAILED_MESSAGE);
     } finally {
       setBusy(false);
     }
@@ -147,7 +156,7 @@ export default function LoginPage() {
       await sendEmailOtp(email);
       return true;
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : '验证码发送失败，请稍后重试');
+      setMessage(error instanceof Error ? error.message : OTP_SEND_FAILED_MESSAGE);
       return false;
     }
   }

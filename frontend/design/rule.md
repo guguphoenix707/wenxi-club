@@ -10,7 +10,7 @@
 - 有明确业务收益时推荐引入三方包
 - 异步界面明确处理加载、失败、空态；支持键盘操作、可访问标签和响应式布局。
 - 不在浏览器调用需要私密密钥的模型 API；接口返回值在边界验证，不默默修正后端业务数据。
-- 错误文案由后端放在 `err.msg`。前端只展示这句话，不按 `code` 维护另一套文案。
-- `src/lib/api` 的 `requestJson` 是唯一的响应入口。`code` 为 0 时返回 `data`。`code` 非 0、网络失败、超时或响应无法识别，都 reject 成同一种 `ApiError`。业务方法直接返回要消费的数据，不判断成功标记。
+- 错误文案由后端放在 `err.msg`。前端不按 `code` 另备文案表，`code` 原样放在 `ApiError` 上，调用方自行匹配。读不到 `msg` 时用 `src/constants/error-messages.ts` 里的兜底句。页面上的错误提示也放在这个常量文件。
+- `src/lib/api` 的 `requestJson` 是唯一的响应入口。`code` 为 0 时返回 `data`。业务失败 reject `ApiError`。超时 reject `TimeoutError`，其他网络失败 reject `NetworkError`。业务方法直接返回要消费的数据，不判断成功标记。
 - 避免重复定义稳定接口；仅抽取真实共享的内容，优先组合，不强制继承。
 - 完成后运行 lint、typecheck 和 build；交互变更补充必要的实际验证，不为纯文档或目录占位编写形式化测试。

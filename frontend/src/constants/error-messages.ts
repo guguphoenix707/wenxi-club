@@ -1,0 +1,14 @@
+export const FALLBACK_MESSAGE = '不好意思出错了，请稍候再试';
+export const TIMEOUT_MESSAGE = '请求超时';
+export const NETWORK_MESSAGE = '网络请求失败';
+export const LOGIN_UNAVAILABLE_MESSAGE = '登录服务暂时不可用';
+export const LOGIN_FAILED_MESSAGE = '登录失败，请稍后重试';
+export const REGISTER_FAILED_MESSAGE = '注册失败，请稍后重试';
+export const OTP_SEND_FAILED_MESSAGE = '验证码发送失败，请稍后重试';
+export const WECHAT_INCOMPLETE_MESSAGE = '登录未完成，请重新扫码';
+export const WECHAT_QR_FAILED_MESSAGE = '登录二维码加载失败';
+export const WECHAT_SCRIPT_FAILED_MESSAGE = '微信登录脚本加载失败';
+export const WECHAT_SCRIPT_UNAVAILABLE_MESSAGE = '微信登录脚本不可用';
+export const WECHAT_AUTH_URL_INVALID_MESSAGE = '授权地址无效';
+export const WECHAT_AUTH_PARAMS_INCOMPLETE_MESSAGE = '授权参数不完整';
+export const LOGIN_CONTAINER_MISSING_MESSAGE = '登录容器不存在';

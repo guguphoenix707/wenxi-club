@@ -2,10 +2,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { once } from 'node:events';
-import { handler } from '../app/api/handler.ts';
+import { createHandler } from '../app/api/handler.ts';
 import { readConfig } from '../app/config.ts';
 
 test('HTTP health, HEAD, unsupported methods and missing routes', async (t) => {
+  const { handler } = createHandler({});
   const server = createServer(handler);
   server.listen(0, '127.0.0.1');
   await once(server, 'listening');
