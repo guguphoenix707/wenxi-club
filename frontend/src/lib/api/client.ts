@@ -10,21 +10,27 @@ export type ApiResult<T> =
 export class ApiContractError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'ApiContractError';
+    this.name = 'ApiError';
+    this.code = code;
   }
 }
 
 const REQUEST_TIMEOUT_MS = 20_000;
 
+type Envelope = {
+  code: number;
+  data: unknown;
+  err: { msg: string };
+};
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
-function readApiError(value: unknown): ApiError | null {
-  if (!isRecord(value) || !isRecord(value.error)) return null;
-  const { code, message } = value.error;
-  if (typeof code !== 'string' || typeof message !== 'string' || !message.trim()) return null;
-  return { code, message };
+function readEnvelope(value: unknown): Envelope | null {
+  if (!isRecord(value) || typeof value.code !== 'number' || !('data' in value) || !isRecord(value.err)) return null;
+  if (typeof value.err.msg !== 'string') return null;
+  return { code: value.code, data: value.data, err: { msg: value.err.msg } };
 }
 
 async function readBody(response: Response) {

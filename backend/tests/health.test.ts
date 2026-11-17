@@ -25,7 +25,8 @@ test('HTTP health, HEAD, unsupported methods and missing routes', async (t) => {
   assert.equal(post.headers.get('allow'), 'GET, HEAD');
   const missing = await fetch(`${base}/api/missing`);
   assert.equal(missing.status, 404);
-  assert.match(await missing.text(), /"code":"NOT_FOUND"/);
+  assert.deepEqual(await missing.json(), { code: 50000, data: null, err: { msg: '接口不存在' } });
+  assert.ok(missing.headers.get('x-request-id'));
 });
 test('invalid ports fail at startup', () => {
   for (const PORT of ['', 'abc', '0', '65536', '1.5']) assert.throws(() => readConfig({ PORT }));

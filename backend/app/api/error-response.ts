@@ -1,42 +1,48 @@
 import type { ServerResponse } from 'node:http';
-import { userFacingMessage } from './error-messages.ts';
-
-type ErrorFields = {
-  code: string;
-  message: string;
-};
+import { API_CODE, failureOf } from './error-messages.ts';
 
 function asRecord(value: unknown) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   return value as Record<string, unknown>;
 }
 
-function readFields(value: unknown, status: number): ErrorFields | null {
+function isBusinessEnvelope(value: unknown) {
   const record = asRecord(value);
-  if (!record) return status === 429 ? { code: 'TOO_MANY_REQUESTS', message: '' } : null;
-  const nested = asRecord(record.error);
-  const source = nested ?? record;
-  const code = typeof source.code === 'string'
-    ? source.code
-    : status === 429 ? 'TOO_MANY_REQUESTS' : '';
-  const message = typeof source.message === 'string' ? source.message : '';
-  if (!code) return null;
-  return { code, message };
+  if (!record || typeof record.code !== 'number' || !('data' in record)) return false;
+  const err = asRecord(record.err);
+  return Boolean(err && typeof err.msg === 'string');
 }
 
-export function normalizeErrorJson(status: number, raw: string) {
+function failureBody(value: unknown, status: number) {
+  const record = asRecord(value);
+  const nested = record ? asRecord(record.error) : null;
+  const source = nested ?? record;
+  const stringCode = source && typeof source.code === 'string'
+    ? source.code
+    : status === 429 ? 'TOO_MANY_REQUESTS' : '';
+  const message = source && typeof source.message === 'string' ? source.message : '';
+  const known = stringCode ? failureOf(stringCode) : undefined;
+  if (known) return { code: known.code, data: null, err: { msg: known.msg } };
+  if (!message.trim()) return null;
+  return { code: API_CODE.SERVER, data: null, err: { msg: message } };
+}
+
+export function normalizeApiJson(status: number, raw: string) {
+  if (status >= 300 && status < 400) return null;
+  if (!raw.trim()) return null;
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
   } catch {
     return null;
   }
-  const fields = readFields(parsed, status);
-  if (!fields) return null;
-  const message = userFacingMessage(fields.code) ?? fields.message;
-  if (!message.trim()) return null;
-  const next = JSON.stringify({ error: { code: fields.code, message } });
-  return next === raw ? null : next;
+  if (isBusinessEnvelope(parsed)) return null;
+  const next = status >= 400
+    ? failureBody(parsed, status)
+    : { code: API_CODE.OK, data: parsed, err: { msg: '' } };
+  if (!next) return null;
+  const encoded = JSON.stringify(next);
+  return encoded === raw ? null : encoded;
 }
 
 function asBuffer(chunk: unknown) {
@@ -74,7 +80,7 @@ export function installErrorBodyRewrite(res: ServerResponse) {
     if (!res.headersSent && replacement) chunks.length = 0;
     if (replacement) chunks.push(asBuffer(chunk));
     const raw = Buffer.concat(chunks);
-    const rewritten = res.statusCode >= 400 ? normalizeErrorJson(res.statusCode, raw.toString('utf8')) : null;
+    const rewritten = normalizeApiJson(res.statusCode, raw.toString('utf8'));
     return end(rewritten === null ? raw : Buffer.from(rewritten), done);
   }) as typeof res.end;
 }

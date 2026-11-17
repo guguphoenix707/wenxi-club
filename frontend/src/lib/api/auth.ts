@@ -1,4 +1,4 @@
-import { ApiContractError, requestJson, type ApiResult } from './client';
+import { ApiError, requestJson } from './client';
 
 export type LoginMethods = {
   emailPassword: boolean;
@@ -25,26 +25,24 @@ function authorizationUrl(value: unknown) {
   return typeof url === 'string' && url ? url : null;
 }
 
-async function requestAuth(input: RequestInfo | URL, init?: RequestInit) {
+function requestAuth(input: RequestInfo | URL, init?: RequestInit) {
   return requestJson(input, { credentials: 'include', ...init });
 }
 
-export async function getBrowserSession(): Promise<ApiResult<BrowserSession>> {
-  const result = await requestAuth('/api/auth/get-session');
-  if (!result.ok) return result;
-  if (!isBrowserSession(result.data)) throw new ApiContractError('服务响应无法识别');
-  return { ok: true, data: result.data };
+export async function getBrowserSession(): Promise<BrowserSession> {
+  const data = await requestAuth('/api/auth/get-session');
+  if (!isBrowserSession(data)) throw new ApiError('服务响应无法识别');
+  return data;
 }
 
-export async function getLoginMethods(): Promise<ApiResult<LoginMethods>> {
-  const result = await requestAuth('/api/auth/login-methods');
-  if (!result.ok) return result;
-  if (!isLoginMethods(result.data)) throw new ApiContractError('服务响应无法识别');
-  return { ok: true, data: result.data };
+export async function getLoginMethods(): Promise<LoginMethods> {
+  const data = await requestAuth('/api/auth/login-methods');
+  if (!isLoginMethods(data)) throw new ApiError('服务响应无法识别');
+  return data;
 }
 
 export async function sendEmailOtp(email: string) {
-  return requestAuth('/api/auth/email-otp/send-verification-otp', {
+  await requestAuth('/api/auth/email-otp/send-verification-otp', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, type: 'email-verification' }),
@@ -52,7 +50,7 @@ export async function sendEmailOtp(email: string) {
 }
 
 export async function registerWithEmail(input: { email: string; password: string; otp: string }) {
-  return requestAuth('/api/auth/email/register', {
+  await requestAuth('/api/auth/email/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
@@ -60,15 +58,15 @@ export async function registerWithEmail(input: { email: string; password: string
 }
 
 export async function signInWithEmail(input: { email: string; password: string }) {
-  return requestAuth('/api/auth/sign-in/email', {
+  await requestAuth('/api/auth/sign-in/email', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ ...input, rememberMe: true }),
   });
 }
 
-export async function startWeChatSignIn(): Promise<ApiResult<string>> {
-  const result = await requestAuth('/api/auth/sign-in/social', {
+export async function startWeChatSignIn() {
+  const data = await requestAuth('/api/auth/sign-in/social', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -78,8 +76,7 @@ export async function startWeChatSignIn(): Promise<ApiResult<string>> {
       disableRedirect: true,
     }),
   });
-  if (!result.ok) return result;
-  const url = authorizationUrl(result.data);
-  if (!url) throw new ApiContractError('服务响应无法识别');
-  return { ok: true, data: url };
-3}
+  const url = authorizationUrl(data);
+  if (!url) throw new ApiError('服务响应无法识别');
+  return url;
+}

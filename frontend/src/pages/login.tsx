@@ -48,24 +48,14 @@ export default function LoginPage() {
       try {
         const methods = await getLoginMethods();
         if (cancelled) return;
-        if (!methods.ok) {
-          setScreen('unconfigured');
-          setMessage(methods.error.message);
-          return;
-        }
         const session = await getBrowserSession();
         if (cancelled) return;
-        if (!session.ok) {
-          setScreen('unconfigured');
-          setMessage(session.error.message);
-          return;
-        }
-        if (session.data?.user) {
+        if (session?.user) {
           setScreen('entering');
           await navigate('/', {replace: true});
           return;
         }
-        setWechatEnabled(methods.data.wechat);
+        setWechatEnabled(methods.wechat);
         setScreen('form');
       } catch (error) {
         if (cancelled) return;
@@ -88,12 +78,8 @@ export default function LoginPage() {
       setAuthorization(null);
       setWechatError('');
       try {
-        const result = await startWeChatSignIn();
-        if (!result.ok) {
-          if (!cancelled) setWechatError(result.error.message);
-          return;
-        }
-        const nextAuthorization = parseWeChatAuthorizationUrl(result.data);
+        const url = await startWeChatSignIn();
+        const nextAuthorization = parseWeChatAuthorizationUrl(url);
         if (cancelled) return;
         setAuthorization(nextAuthorization);
       } catch (error) {
@@ -133,11 +119,7 @@ export default function LoginPage() {
     setBusy(true);
     setMessage('');
     try {
-      const result = await signInWithEmail(values);
-      if (!result.ok) {
-        setMessage(result.error.message);
-        return;
-      }
+      await signInWithEmail(values);
       await enterAfterAuth();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '登录失败，请稍后重试');
@@ -150,11 +132,7 @@ export default function LoginPage() {
     setBusy(true);
     setMessage('');
     try {
-      const result = await registerWithEmail(values);
-      if (!result.ok) {
-        setMessage(result.error.message);
-        return;
-      }
+      await registerWithEmail(values);
       await enterAfterAuth();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '注册失败，请稍后重试');
@@ -166,11 +144,7 @@ export default function LoginPage() {
   async function handleSendCode(email: string) {
     setMessage('');
     try {
-      const result = await sendEmailOtp(email);
-      if (!result.ok) {
-        setMessage(result.error.message);
-        return false;
-      }
+      await sendEmailOtp(email);
       return true;
     } catch (error) {
       setMessage(error instanceof Error ? error.message : '验证码发送失败，请稍后重试');
