@@ -1,0 +1,17 @@
+[Unit]
+Description=Wenxi Club API
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=__USER__
+WorkingDirectory=/srv/wenxi-club
+EnvironmentFile=/srv/wenxi-club/backend/.env
+ExecStart=/usr/local/bin/npm run start:backend
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=15
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=multi-user.target
