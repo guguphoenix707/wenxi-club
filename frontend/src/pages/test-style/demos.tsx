@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react';
 import { ButtonDisplay } from './components/button-display';
 import { InputDisplay } from './components/input-display';
+import { PageHeaderDisplay } from './components/page-header-display';
 
 export type StyleDemo = {
   id: string;
@@ -12,4 +13,5 @@ export type StyleDemo = {
 export const styleDemos: StyleDemo[] = [
   { id: 'button', label: 'button', Component: ButtonDisplay },
   { id: 'input', label: 'input', Component: InputDisplay },
+  { id: 'page-header', label: 'page-header', Component: PageHeaderDisplay },
 ];
