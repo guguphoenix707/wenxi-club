@@ -1,0 +1,71 @@
+.bread-input {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  text-align: left;
+}
+
+.bread-input-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.bread-input-control {
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+  width: 100%;
+  align-items: stretch;
+}
+
+.bread-input-field {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 0;
+}
+
+.bread-input-native {
+  height: 48px;
+  min-width: 0;
+  width: 100%;
+  padding: 0 14px;
+  border: var(--outline-width) solid var(--outline);
+  border-radius: var(--radius-control);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 14px;
+  box-shadow: none;
+}
+
+.bread-input-native:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--focus) 40%, transparent);
+  outline-offset: 3px;
+  border-color: var(--outline-strong);
+}
+
+.bread-input-native[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.bread-input-control > .bread-button {
+  flex-shrink: 0;
+  align-self: stretch;
+  min-width: 7.5rem;
+  min-height: 48px;
+}
+
+.bread-input-hint,
+.bread-input-error {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.bread-input-hint {
+  color: var(--text-muted);
+}
+
+.bread-input-error {
+  color: var(--danger);
+}

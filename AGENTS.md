@@ -3,6 +3,7 @@
 - 先读 README.md、docs/project-structure.md 和目标目录的 design/rule.md。
 - 原型在 /Users/xin/Documents/wenxi-house，仅作为产品与视觉参考；生产代码在本仓库。
 - 不使用 Ant Design，不复制原型的模拟数据或 localStorage 作为正式数据层。
+- 不修改 `frontend/src/components/ui/` 里的 shadcn 源文件。改默认样式就新增文件再引入，或用 `components/common/` 包装 `components/ui/`。
 - TypeScript strict；保持高内聚、低耦合，按需求新增抽象和依赖。
 - 前端不得导入后端内部代码或读取私密凭证；权限与归属在服务端校验。
 - 不覆盖用户改动，不擅自提交、推送或发布。

@@ -1,0 +1,148 @@
+.showcase {
+  max-width: 1100px;
+  padding-bottom: 32px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--accent-ink);
+  font-size: 10px;
+  letter-spacing: 0.13em;
+}
+
+.intro {
+  max-width: 620px;
+  margin: 12px 0 0;
+  font-size: 13px;
+}
+
+.section {
+  margin-top: 32px;
+}
+
+.section h2 {
+  margin: 0 0 10px;
+}
+
+.section > p {
+  margin: 0 0 18px;
+  font-size: 12px;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--outline);
+  border-radius: var(--radius-card);
+  background: var(--paper);
+  box-shadow: var(--shadow-soft);
+}
+
+.table {
+  width: 100%;
+  min-width: 620px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.table th, .table td {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--outline);
+}
+
+.table thead th {
+  background: var(--accent-soft);
+  font-size: 12px;
+}
+
+.table tbody th {
+  font-weight: 400;
+}
+
+.table tr:last-child > * {
+  border-bottom: 0;
+}
+
+.table small {
+  display: block;
+  margin-top: 5px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.showcase code {
+  font-size: 11px;
+}
+
+.panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+  border: 1px solid var(--outline);
+  border-radius: var(--radius-card);
+  background: var(--paper);
+}
+
+.panel + .panel {
+  margin-top: 16px;
+}
+
+.example {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 12px;
+  min-width: 90px;
+}
+
+.example code {
+  color: var(--text-muted);
+}
+
+.feedback {
+  position: sticky;
+  bottom: 16px;
+  margin: 32px 0 0;
+  padding: 12px 18px;
+  border: 1px solid var(--ink);
+  border-radius: var(--radius-control);
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: var(--shadow-warm);
+  font-size: 12px;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 767px) {
+  .panel {
+    padding: 20px 16px;
+    gap: 20px;
+  }
+
+  .table th, .table td {
+    padding: 16px;
+  }
+
+  .feedback {
+    bottom: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}
+
+.code { max-width: 100%; overflow-x: auto; margin: 0; padding: 24px; border: 1px solid var(--outline); border-radius: var(--radius-card); background: var(--paper); color: var(--ink); line-height: 1.8; tab-size: 2; }

@@ -1,0 +1,20 @@
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--accent-ink);
+  font-size: 10px;
+  letter-spacing: 0.13em;
+}
+
+.panel {
+  margin-top: 30px;
+  padding: 28px;
+  background: var(--paper);
+  border: var(--outline-width) solid var(--outline);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-soft);
+}
+
+.note {
+  margin-top: 28px;
+  font-size: 13px;
+}

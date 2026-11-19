@@ -1,0 +1,23 @@
+---
+description: 不修改 shadcn 源文件；产品样式用新增文件或 common 包装层
+alwaysApply: true
+---
+
+# shadcn 源文件隔离
+
+`frontend/src/components/ui/` 是 shadcn 生成的源文件。不要改里面的 TSX、默认 class、cva 或外观，避免和上游难以区分、难以 debug。
+
+改默认样式时二选一：
+
+1. **新增文件再引入**：并列 CSS（如 `components/common/button/button.css`），由包装层或业务组件 import，不要写进 `ui/*.tsx`。
+2. **包装业务组件**：`components/common/` 套 `components/ui/`。页面和业务只引用 `common`，例如 `@/components/common/button`，不要直接改 `ui/button`。
+
+```tsx
+// 不要
+import { Button } from '@/components/ui/button' // 再改 ui/button.tsx 的样式
+
+// 要
+import { Button } from '@/components/common/button'
+```
+
+`styles/shadcn.css` 只做 token 映射，不写组件外观。全局只留真正跨页面的基础样式。

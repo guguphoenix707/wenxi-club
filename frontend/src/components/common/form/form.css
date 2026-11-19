@@ -1,0 +1,14 @@
+.bread-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 28px;
+  min-width: 0;
+  text-align: left;
+}
+
+.bread-form-error {
+  margin: 4px 0 0;
+  color: var(--danger);
+  font-size: 12px;
+  line-height: 1.6;
+}
