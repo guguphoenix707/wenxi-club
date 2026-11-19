@@ -47,8 +47,7 @@ fi
 if [ ! -f /srv/wenxi-club/backend/.env ]; then
   db_password="$(openssl rand -hex 24)"
   auth_secret="$(openssl rand -base64 48 | tr -d '\n')"
-  public_ip="$(curl -fsSL --max-time 2 http://metadata.tencentyun.com/latest/meta-data/public-ipv4 || true)"
-  public_origin="http://${public_ip:-127.0.0.1}"
+  public_origin="${PUBLIC_ORIGIN:-https://wenxi-club.top}"
   sudo -u postgres psql -v ON_ERROR_STOP=1 <<SQL
 DO \$\$
 BEGIN
@@ -73,7 +72,7 @@ WECHAT_APP_SECRET=
 EOF
   chown "$deploy_user:$deploy_user" /srv/wenxi-club/backend/.env
   chmod 600 /srv/wenxi-club/backend/.env
-  echo "已写入 /srv/wenxi-club/backend/.env，浏览器地址是 ${public_origin}。换成正式域名后改 BETTER_AUTH_URL。"
+  echo "已写入 /srv/wenxi-club/backend/.env，浏览器地址是 ${public_origin}。"
 fi
 
 sed "s/__USER__/${deploy_user}/g" /srv/wenxi-club/deploy/wenxi-api.service > /etc/systemd/system/wenxi-api.service
