@@ -16,6 +16,22 @@ jobs:
     concurrency:
       group: check-${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
+    env:
+      DATABASE_URL: postgres://wenxi:wenxi@127.0.0.1:5432/wenxi
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: wenxi
+          POSTGRES_PASSWORD: wenxi
+          POSTGRES_DB: wenxi
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U wenxi -d wenxi"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - name: Checkout
         uses: actions/checkout@v7.0.1
@@ -28,6 +44,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Migrate
+        run: npm run db:migrate
 
       - name: Check
         run: npm run check
